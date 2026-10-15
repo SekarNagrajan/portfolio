@@ -15,6 +15,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Building2, FileSpreadsheet } from "lucide-react";
 
 /**
  * Illustrated, looping product vignettes for the home-page project
@@ -41,6 +42,7 @@ function usePhase(steps: number, ms: number) {
 export function ProjectPreview({ id }: { id: string }) {
   if (id === "crm") return <CrmPreview />;
   if (id === "anchor") return <AnchorPreview />;
+  if (id === "pams-legacy") return <PamsLegacyPreview />;
   return <PamsPreview />;
 }
 
@@ -335,6 +337,96 @@ function PamsPreview() {
         </div>
       </div>
       <Outcome show={done}>Customer did it themselves</Outcome>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* PAMS — manifests batch over EDI into a compliant invoice.          */
+/* ------------------------------------------------------------------ */
+
+const PRINCIPALS = ["Principal A", "Principal B", "Principal C"] as const;
+const CHECKS = ["D&D", "GST", "VAT", "e-Invoice"] as const;
+
+function PamsLegacyPreview() {
+  // 0–2 records batch · 3 EDI sent · 4–7 compliance checks · 8 hold
+  const { ref, phase } = usePhase(9, 900);
+  const principal = Math.floor(phase / 3) % PRINCIPALS.length;
+  const sent = phase >= 3;
+
+  return (
+    <div ref={ref} className="grid size-full grid-cols-[auto_1fr_auto_1fr] items-center gap-2 p-4 sm:gap-3 sm:p-6">
+      {/* Principals */}
+      <div className="flex flex-col gap-1.5">
+        {PRINCIPALS.map((p, i) => (
+          <span
+            key={p}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] transition-colors duration-300",
+              i === principal ? "border-accent/60 bg-accent/10 text-accent" : "border-border/60 text-muted-foreground",
+            )}
+          >
+            <Building2 size={11} />
+            <span className="hidden sm:inline">{p}</span>
+            <span className="sm:hidden">{p.slice(-1)}</span>
+          </span>
+        ))}
+      </div>
+
+      {/* Manifest rows */}
+      <Panel title="Manifest" icon={<FileSpreadsheet size={12} />}>
+        <div className="flex flex-col gap-1.5">
+          {[0, 1, 2].map((r) => (
+            <motion.span
+              key={r}
+              className="flex items-center gap-1.5 rounded-md bg-foreground/[0.04] px-1.5 py-1"
+              initial={false}
+              animate={{ opacity: phase % 3 >= r || sent ? 1 : 0.3, x: sent ? 6 : 0 }}
+              transition={{ duration: 0.3, delay: sent ? r * 0.05 : 0 }}
+            >
+              <span className="size-1.5 rounded-full bg-accent/70" />
+              <span className="h-1 flex-1 rounded-full bg-foreground/20" />
+              <span className="h-1 w-4 rounded-full bg-foreground/10" />
+            </motion.span>
+          ))}
+        </div>
+      </Panel>
+
+      {/* EDI hop */}
+      <div className="flex flex-col items-center gap-1">
+        <motion.span
+          className="grid h-8 place-items-center rounded-full bg-accent/15 px-2.5 font-mono text-[9px] font-semibold text-accent ring-1 ring-accent/40"
+          animate={phase === 3 ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          EDI
+        </motion.span>
+        <span className="font-mono text-[8.5px] text-muted-foreground">{sent ? "sent" : "batching"}</span>
+      </div>
+
+      {/* Invoice */}
+      <Panel title="Export invoice" icon={<FileText size={12} />}>
+        <span className="block h-1.5 w-3/4 rounded-full bg-foreground/20" />
+        <span className="mt-1.5 block h-1.5 w-1/2 rounded-full bg-foreground/10" />
+        <div className="mt-3 grid grid-cols-2 gap-1">
+          {CHECKS.map((c, i) => {
+            const ok = phase >= 4 + i;
+            return (
+              <span
+                key={c}
+                className={cn(
+                  "flex items-center gap-1 rounded-md border px-1.5 py-1 text-[9px] font-medium transition-colors duration-300",
+                  ok ? "border-accent/50 bg-accent/10 text-accent" : "border-border/60 text-muted-foreground/70",
+                )}
+              >
+                {ok ? <Check size={9} strokeWidth={3} /> : <span className="size-[9px] rounded-full border border-current" />}
+                {c}
+              </span>
+            );
+          })}
+        </div>
+        <Outcome show={phase >= 7}>Compliant & sent</Outcome>
+      </Panel>
     </div>
   );
 }
