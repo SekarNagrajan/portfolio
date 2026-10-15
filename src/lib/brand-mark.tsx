@@ -19,7 +19,7 @@ export async function renderBrandMark(size: number, { rounded = true }: { rounde
           borderRadius: rounded ? size * 0.22 : 0,
           backgroundColor: brand.background,
           backgroundImage: `linear-gradient(135deg, ${brand.accent}, ${brand.accent}8c)`,
-          color: brand.background,
+          color: brand.accentForeground,
           fontSize: size * 0.42,
           fontWeight: 700,
           letterSpacing: "-0.04em",

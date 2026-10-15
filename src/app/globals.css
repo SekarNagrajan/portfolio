@@ -22,8 +22,10 @@
   --muted: oklch(0.22 0.01 280);
   --muted-foreground: oklch(0.72 0.015 280);
 
-  /* Single brand accent — every highlight, glow, and gradient derives from it */
-  --accent: oklch(0.76 0.14 225);
+  /* Single brand accent — every highlight, glow, and gradient derives from it.
+     Brand blue is #0958d9; on this dark surface it only reaches ~2.9:1, so dark
+     mode uses its lighter step #4096ff (~6:1) to keep accent text legible. */
+  --accent: #4096ff;
   --accent-foreground: oklch(0.145 0.005 285);
 
   --primary: oklch(0.985 0.002 285);
@@ -37,7 +39,7 @@
 
   --border: oklch(0.27 0.012 280);
   --input: oklch(0.27 0.012 280);
-  --ring: oklch(0.76 0.14 225);
+  --ring: #4096ff;
 
   --radius: 0.875rem;
   --nav-height: 4.5rem;
@@ -66,7 +68,7 @@
   --popover-foreground: oklch(0.16 0.01 280);
   --muted: oklch(0.96 0.004 280);
   --muted-foreground: oklch(0.45 0.015 280);
-  --accent: oklch(0.53 0.16 240); /* ≥4.5:1 on background (WCAG AA) */
+  --accent: #0958d9; /* Brand blue — ~6:1 on background (WCAG AA) */
   --accent-foreground: oklch(0.985 0.002 285);
   --primary: oklch(0.16 0.01 280);
   --primary-foreground: oklch(0.985 0.002 285);
@@ -74,7 +76,7 @@
   --secondary-foreground: oklch(0.16 0.01 280);
   --border: oklch(0.9 0.006 280);
   --input: oklch(0.9 0.006 280);
-  --ring: oklch(0.53 0.16 240);
+  --ring: #0958d9;
 
   /* Frosted white panels — higher fill so text stays readable over aurora */
   --glass-bg: color-mix(in oklab, var(--card) 78%, transparent);

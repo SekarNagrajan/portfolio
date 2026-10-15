@@ -100,7 +100,7 @@ export function Footer() {
       <div className="shell py-16 sm:py-20">
         <FooterCta />
 
-        <Reveal className="mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-[1fr_1.1fr_1.3fr] lg:gap-16">
+        <Reveal className="mt-14 grid first:mt-0 gap-12 sm:grid-cols-2 lg:grid-cols-[1fr_1.1fr_1.3fr] lg:gap-16">
           {/* Navigate */}
           <nav aria-label="Footer">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Navigate</h3>
@@ -164,7 +164,7 @@ export function Footer() {
         <div className="mt-16 flex flex-col-reverse items-start justify-between gap-6 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center">
           <div className="space-y-2">
             <p>
-              © {COPYRIGHT_YEAR} {profile.name}. Built with Next.js, Tailwind v4, and Motion.
+              © Copyright {COPYRIGHT_YEAR} {profile.name}.
             </p>
             <p>
               Page-view analytics are collected. No ad trackers.{" "}

@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
               alignItems: "center",
               justifyContent: "center",
               backgroundImage: `linear-gradient(135deg, ${brand.accent}, ${brand.accent}99)`,
-              color: brand.background,
+              color: brand.accentForeground,
               fontSize: 28,
               fontWeight: 700,
               boxShadow: `0 0 60px ${brand.accent}66`,
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
 
         {/* Title */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <div style={{ width: 96, height: 6, borderRadius: 999, backgroundColor: brand.accent }} />
+          <div style={{ width: 96, height: 6, borderRadius: 999, backgroundColor: brand.accentBright }} />
           <div
             style={{
               fontSize: title.length > 48 ? 64 : 80,
@@ -103,8 +103,8 @@ export async function GET(req: NextRequest) {
               </div>
             ))}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, color: brand.accent }}>
-            <div style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: brand.accent }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, color: brand.accentBright }}>
+            <div style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: brand.accentBright }} />
             {profile.location}
           </div>
         </div>

@@ -69,7 +69,7 @@ export function ResumeExperience({ src, filename }: Props) {
           </div>
         </LayoutGroup>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] xl:gap-8">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] xl:gap-8">
           <div className={cn(view !== "read" && "hidden lg:block")}>
             <QuickRead />
           </div>

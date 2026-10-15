@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { SpotlightCard, Magnetic } from "@/components/motion/Effects";
 import { CopyEmailButton } from "@/components/features/CopyEmailButton";
@@ -21,6 +22,8 @@ const HEADLINE = ["Let's", "build", "something"] as const;
 /** Big closing call-to-action with a contact panel recruiters can act on. */
 export function FooterCta() {
   const reduce = useReducedMotion();
+  // The contact page is this call-to-action, so don't repeat it there.
+  if (usePathname() === "/contact") return null;
 
   return (
     <SpotlightCard lift={false} className="p-0">
@@ -165,7 +168,7 @@ const minuteFmt = new Intl.DateTimeFormat("en-US", {
  * to expect a reply. Reads the clock only after mount — never during
  * prerender — so the static shell stays deterministic.
  */
-function LocalTime() {
+export function LocalTime() {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
