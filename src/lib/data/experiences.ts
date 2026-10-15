@@ -12,6 +12,8 @@ export type Experience = {
   /** Structured facts from `companyContext`, for compact display. */
   companyFacts?: {
     products: string;
+    /** Operator segments the company's products serve. */
+    segments: readonly string[];
     offices: readonly string[];
     credentials: readonly string[];
   };
@@ -32,8 +34,9 @@ export const experiences: readonly Experience[] = [
       "Maritime enterprise system vendor since 2003 — 36 products (31 operational + 5 AI) on one data layer, powering Liner, Ship Management, NVOCC, Feeder, Agency, Tanker, and Bulk operators. Offices in Chennai (HQ), Dubai, Singapore, Hamburg, Yeongwol-gun, and Rio de Janeiro. Certified ISO/IEC 27001:2022, CMMI Level 3, ISO 14064-1, and ITIL V4.",
     companyFacts: {
       products: "36 products · 31 operational + 5 AI",
+      segments: ["Liner", "Ship Management", "NVOCC", "Feeder", "Agency", "Tanker", "Bulk"],
       offices: ["Chennai", "Dubai", "Singapore", "Hamburg", "Yeongwol-gun", "Rio de Janeiro"],
-      credentials: ["ISO/IEC 27001:2022", "CMMI Level 3", "ITIL V4"],
+      credentials: ["ISO/IEC 27001:2022", "CMMI Level 3", "ISO 14064-1", "ITIL V4"],
     },
     location: "Chennai, India (SIPCOT IT Park, Siruseri)",
     period: "Oct 2023 – Present",
