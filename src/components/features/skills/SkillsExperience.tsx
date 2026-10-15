@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import Link from "next/link";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { Search, X } from "lucide-react";
-import { SpotlightCard, CountUp } from "@/components/motion/Effects";
+import { CountUp } from "@/components/motion/Effects";
 import { SKILL_ICONS } from "@/components/features/SkillGroupCard";
 import { TechLogo, logoForTech, monogramFor } from "@/components/icons/TechLogos";
 import { BriefcaseIcon, CodeIcon, SparklesIcon } from "@/components/icons/AnimatedIcons";
@@ -248,22 +248,22 @@ export function SkillsExperience() {
 /* Hero with the layer donut                                          */
 /* ------------------------------------------------------------------ */
 
+/** Donut geometry — static, so computed once. */
+const R = 78;
+const C = 2 * Math.PI * R;
+const GAP = 3;
+const ARCS = skillGroups.map((g, i) => {
+  const before = skillGroups.slice(0, i).reduce((n, x) => n + x.items.length, 0);
+  const len = (g.items.length / total) * C;
+  return { g, i, len: Math.max(len - GAP, 0), start: (before / total) * C };
+});
+
 function Hero({ hovered, onLayer }: { hovered: string; onLayer: (id: string) => void }) {
   const reduce = useReducedMotion();
   const [hover, setHover] = useState<string | null>(null);
   const focus = hover ?? (hovered !== ALL ? hovered : null);
   const focusGroup = skillGroups.find((g) => g.id === focus);
 
-  const R = 78;
-  const C = 2 * Math.PI * R;
-  const GAP = 3;
-  let offset = 0;
-  const arcs = skillGroups.map((g, i) => {
-    const len = (g.items.length / total) * C;
-    const arc = { g, i, len: Math.max(len - GAP, 0), start: offset };
-    offset += len;
-    return arc;
-  });
 
   return (
     <section
@@ -315,7 +315,7 @@ function Hero({ hovered, onLayer }: { hovered: string; onLayer: (id: string) => 
             <div className="relative mx-auto size-44">
               <svg viewBox="0 0 200 200" className="size-full -rotate-90" aria-hidden>
                 <circle cx="100" cy="100" r={R} fill="none" strokeWidth="22" className="stroke-foreground/[0.06]" />
-                {arcs.map(({ g, i, len, start }) => (
+                {ARCS.map(({ g, i, len, start }) => (
                   <motion.circle
                     key={g.id}
                     cx="100"
@@ -452,7 +452,7 @@ function Toolbar({
   setQuery: (q: string) => void;
   layer: string;
   setLayer: (l: string) => void;
-  searchRef: React.RefObject<HTMLInputElement | null>;
+  searchRef: RefObject<HTMLInputElement | null>;
   shown: number;
 }) {
   const reduce = useReducedMotion();
