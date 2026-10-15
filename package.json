@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "mail:verify": "tsx --conditions=react-server scripts/mail-verify.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.17",
@@ -35,6 +37,8 @@
     "eslint-config-next": "16.4.0",
     "server-only": "^0.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

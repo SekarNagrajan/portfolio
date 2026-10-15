@@ -1,7 +1,21 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import { Mail } from "lucide-react";
-import { GithubIcon, LinkedinIcon } from "@/components/icons/BrandIcons";
 import { profile } from "@/lib/data/profile";
+import { experiences } from "@/lib/data/experiences";
+import { Reveal } from "@/components/motion/Reveal";
+import { FooterCta } from "@/components/features/footer/FooterCta";
+import { BackToTop } from "@/components/features/footer/BackToTop";
+import { Wordmark } from "@/components/features/footer/Wordmark";
+import {
+  ArrowUpRightIcon,
+  GithubIcon,
+  LinkedinIcon,
+  MailIcon,
+  MotionLink,
+  SparklesIcon,
+} from "@/components/icons/AnimatedIcons";
+import { hoverTrigger } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 /**
  * Build-pinned copyright year.
@@ -11,48 +25,160 @@ import { profile } from "@/lib/data/profile";
  */
 const COPYRIGHT_YEAR = new Date().getFullYear();
 
+const SITEMAP = [
+  { href: "/about", label: "About" },
+  { href: "/skills", label: "Skills" },
+  { href: "/projects", label: "Projects" },
+  { href: "/experience", label: "Experience" },
+  { href: "/resume", label: "Resume" },
+  { href: "/contact", label: "Contact" },
+] as const;
+
+const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const handle = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/^mailto:/, "");
+
+const SOCIALS = [
+  { href: profile.socials.linkedin, label: "LinkedIn", icon: LinkedinIcon, external: true },
+  { href: profile.socials.github, label: "GitHub", icon: GithubIcon, external: true },
+  { href: profile.socials.email, label: "Email", icon: MailIcon, external: false },
+] as const;
+
+/** Words for the scrolling band along the top edge. */
+const BAND = [
+  "Full-stack engineering",
+  "Multi-tenant SaaS",
+  "React 19",
+  "Spring Boot 4",
+  "Java 21",
+  "AI workflows",
+  "Design systems",
+  "Maritime platforms",
+] as const;
+
 export function Footer() {
-  const year = COPYRIGHT_YEAR;
+  const job = experiences[0];
+  const glance = [
+    { label: "Role", value: profile.title },
+    { label: "Currently", value: `${job.role} · ${job.company.split(" ")[0]}` },
+    { label: "Based in", value: profile.location },
+    { label: "Open to", value: capitalise(profile.availability.replace(/^Open to /, "")) },
+  ];
+
   return (
-    <footer className="mt-24 border-t border-border/60 bg-background">
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-6 px-6 py-10 sm:flex-row sm:items-center">
-        <div className="text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">{profile.name}</p>
-          <p>
-            {profile.title} · {profile.location}
-          </p>
-          <p className="mt-1 text-xs">
-            © {year} — Built with Next.js 15, Tailwind v4, and Motion.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href={profile.socials.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub profile"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
-          >
-            <GithubIcon size={16} />
-          </Link>
-          <Link
-            href={profile.socials.linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="LinkedIn profile"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
-          >
-            <LinkedinIcon size={16} />
-          </Link>
-          <Link
-            href={profile.socials.email}
-            aria-label="Send email"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
-          >
-            <Mail className="size-4" />
-          </Link>
+    <footer className="relative mt-16 overflow-hidden border-t border-border/60 pb-[calc(var(--tab-bar-height)+env(safe-area-inset-bottom))] lg:mt-24">
+      {/* Glow seam along the top edge. */}
+      <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[60vh] w-[80vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--accent)_14%,transparent),transparent)]" />
+
+      {/* Scrolling band */}
+      <div
+        aria-hidden
+        className="group flex overflow-hidden border-b border-border/60 py-5 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]"
+      >
+        {/* <div
+          className="animate-marquee flex w-max shrink-0 items-center gap-8 pr-8 group-hover:[animation-play-state:paused]"
+          style={{ "--marquee-duration": "45s" } as CSSProperties}
+        >
+          {[...BAND, ...BAND].map((w, i) => (
+            <span key={i} className="flex shrink-0 items-center gap-8">
+              <span
+                className={cn(
+                  "text-3xl font-semibold tracking-tight sm:text-5xl",
+                  i % 2
+                    ? "text-transparent [-webkit-text-stroke:1px_color-mix(in_oklab,var(--foreground)_35%,transparent)]"
+                    : "text-foreground/85",
+                )}
+              >
+                {w}
+              </span>
+              <SparklesIcon size={22} className="text-accent" />
+            </span>
+          ))}
+        </div> */}
+      </div>
+
+      <div className="shell py-16 sm:py-20">
+        <FooterCta />
+
+        <Reveal className="mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-[1fr_1.1fr_1.3fr] lg:gap-16">
+          {/* Navigate */}
+          <nav aria-label="Footer">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Navigate</h3>
+            <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3.5 text-sm">
+              {SITEMAP.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="group inline-flex items-center gap-2 text-foreground/80 transition-colors hover:text-foreground">
+                    <span className="h-px w-3 bg-border transition-all duration-300 group-hover:w-6 group-hover:bg-accent" />
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* Connect */}
+          <div>
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Connect</h3>
+            <ul className="mt-5 flex flex-col gap-2">
+              {SOCIALS.map(({ href, label, icon: Icon, external }) => (
+                <li key={label}>
+                  <MotionLink
+                    href={href}
+                    data-track="profile_click"
+                    data-track-label={label}
+                    {...hoverTrigger}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="group flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 p-2 pr-4 transition-[border-color,background-color] duration-300 hover:border-accent/50 hover:bg-accent/[0.06]"
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-border/60 bg-background/50 text-muted-foreground transition-colors group-hover:text-accent">
+                      <Icon size={17} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-foreground">{label}</span>
+                      <span className="block truncate font-mono text-[11px] text-muted-foreground">{handle(href)}</span>
+                    </span>
+                    <span className="text-muted-foreground transition-[color,transform] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent">
+                      <ArrowUpRightIcon size={15} />
+                    </span>
+                  </MotionLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* At a glance — the recruiter summary */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">At a glance</h3>
+            <dl className="mt-5 divide-y divide-border/60 rounded-2xl border border-border/60 bg-card/40">
+              {glance.map((g) => (
+                <div key={g.label} className="flex items-baseline justify-between gap-4 px-4 py-3">
+                  <dt className="shrink-0 text-xs text-muted-foreground">{g.label}</dt>
+                  <dd className="text-right text-sm font-medium text-foreground">{g.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </Reveal>
+
+        {/* Legal + back to top */}
+        <div className="mt-16 flex flex-col-reverse items-start justify-between gap-6 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center">
+          <div className="space-y-2">
+            <p>
+              © {COPYRIGHT_YEAR} {profile.name}. Built with Next.js, Tailwind v4, and Motion.
+            </p>
+            <p>
+              Page-view analytics are collected. No ad trackers.{" "}
+              <Link href="/contact" className="underline-offset-4 hover:text-foreground hover:underline">
+                Ask to remove your data
+              </Link>
+              .
+            </p>
+          </div>
+          <BackToTop />
         </div>
       </div>
+
+      <Wordmark text={profile.firstName.toUpperCase()} />
     </footer>
   );
 }

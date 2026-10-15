@@ -7,13 +7,17 @@ export const profile = {
   firstName: "Sekar",
   title: "Full-Stack Software Engineer",
   tagline:
-    "Building scalable, multi-tenant enterprise platforms with React 19, Spring Boot 4, and Java 21.",
+    "I design and ship scalable multi-tenant platforms with React 19, Spring Boot 4, and Java 21.",
   summary:
     "Full-stack Software Engineer with 3 years of experience shipping high-performance, enterprise-grade applications. Specializing in React 19 / React Native frontends, Spring Boot 4 + Java 21 services, multi-tenant SaaS architectures, secure REST APIs, and AI-driven workflow automation.",
   location: "Chennai, India",
   email: "sekarnagarajan1234@gmail.com",
   phone: "+91 6382802973",
-  availability: "Open to senior full-stack and architect roles",
+  availability: "Open to senior full-stack and architecture roles",
+  /** Shown on About only when non-empty. */
+  workAuth: "",
+  workMode: "",
+  notice: "",
   socials: {
     github: "https://github.com/SekarNagarajan07",
     linkedin: "https://linkedin.com/in/sekar-nagarajan07",

@@ -1,7 +1,10 @@
-import { Section, SectionHeader } from "@/components/features/Section";
-import { SkillGroupList } from "@/components/features/SkillGroupList";
+import { HeaderArt } from "@/components/features/HeaderArt";
+import { PageHeader, Section } from "@/components/features/Section";
+import { SkillGroupCard } from "@/components/features/SkillGroupCard";
+import { SparklesIcon } from "@/components/icons/AnimatedIcons";
 import { skillGroups } from "@/lib/data/skills";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata = buildMetadata({
   title: "Skills",
@@ -10,37 +13,47 @@ export const metadata = buildMetadata({
   path: "/skills",
 });
 
+/** Bento spans on a 6-col grid so the matrix fills wide screens. */
+const SPANS: Record<string, string> = {
+  languages: "xl:col-span-2",
+  frontend: "xl:col-span-4",
+  backend: "xl:col-span-3",
+  ai: "xl:col-span-3",
+  database: "xl:col-span-3",
+  tools: "xl:col-span-3",
+};
+
 export default function SkillsPage() {
+  const total = skillGroups.reduce((n, g) => n + g.items.length, 0);
+
   return (
-    <Section id="skills">
-      <SectionHeader
+    <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Skills", path: "/skills" }])} />
+      <PageHeader
+        art={<HeaderArt variant="skills" />}
         eyebrow="Skills"
-        title="Technical matrix."
+        icon={<SparklesIcon size={14} trigger="self" />}
+        title={
+          <>
+            A <span className="text-gradient">production-tested</span> technical matrix.
+          </>
+        }
         description="Grouped by layer so recruiters, engineering managers, and clients can scan quickly. All items reflect production usage across enterprise platforms, not tutorial-level exposure."
+        aside={
+          <div className="glass rounded-2xl px-6 py-4 text-right">
+            <p className="text-4xl font-semibold tracking-tight text-gradient">{total}</p>
+            <p className="text-xs text-muted-foreground">skills across {skillGroups.length} layers</p>
+          </div>
+        }
       />
 
-      <div className="space-y-14">
-        {skillGroups.map((group) => (
-          <section
-            key={group.id}
-            aria-labelledby={`group-${group.id}`}
-            className="rounded-xl border border-border/70 bg-card/50 p-6 shadow-sm sm:p-8"
-          >
-            <div className="mb-6 flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:justify-between">
-              <h3
-                id={`group-${group.id}`}
-                className="text-xl font-semibold tracking-tight text-foreground"
-              >
-                {group.label}
-              </h3>
-              <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-                {group.description}
-              </p>
-            </div>
-            <SkillGroupList items={group.items} />
-          </section>
-        ))}
-      </div>
-    </Section>
+      <Section id="skills">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-6">
+          {skillGroups.map((group, i) => (
+            <SkillGroupCard key={group.id} group={group} index={i} className={SPANS[group.id]} />
+          ))}
+        </div>
+      </Section>
+    </>
   );
 }

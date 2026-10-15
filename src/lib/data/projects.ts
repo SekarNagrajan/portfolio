@@ -15,6 +15,17 @@ export type Project = {
   githubUrl?: string;
   liveUrl?: string;
   featured?: boolean;
+  /**
+   * Shareable path segment under `/projects`. When omitted, `id` is used.
+   */
+  slug?: string;
+  /**
+   * A business outcome you are allowed to publish (time saved, volume,
+   * error rate). An empty string hides the metric — do not invent one.
+   */
+  outcome?: string;
+  /** Public image path, for example `/projects/crm.png`. Omit until a file exists. */
+  image?: string;
 };
 
 export const projects: readonly Project[] = [
@@ -47,6 +58,7 @@ export const projects: readonly Project[] = [
       "AI-powered Voice-to-Text (OpenAI) and Image-to-Lead (Google Cloud Vision) capture flows.",
       "ECharts productivity dashboards cutting manual data entry across the sales team.",
     ],
+    outcome: "",
     featured: true,
   },
   {
@@ -75,6 +87,7 @@ export const projects: readonly Project[] = [
       "ERAX AI chatbot: natural-language queries → SQL generation → interactive charts rendered inline.",
       "Contributed ~20% backend on VHS financial / EPDA modules over dual SQL Server datasources.",
     ],
+    outcome: "",
     featured: true,
   },
   {
@@ -100,6 +113,7 @@ export const projects: readonly Project[] = [
       "Operational dashboards surfacing SLA indicators and live vessel schedules.",
       "Deep AG Grid integrations for high-density operational data.",
     ],
+    outcome: "",
     featured: true,
   },
   {
@@ -129,6 +143,7 @@ export const projects: readonly Project[] = [
       "Automated EDI batch processes for manifest exchange and invoicing.",
       "Jasper Reports pipeline for operational and financial reporting.",
     ],
+    outcome: "",
   },
 ] as const;
 

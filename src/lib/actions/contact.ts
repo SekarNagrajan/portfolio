@@ -1,7 +1,15 @@
 "use server";
 
+import { headers } from "next/headers";
+import { after } from "next/server";
 import { ContactSchema } from "@/lib/schemas/contact";
-import { getMailer } from "@/lib/mailer";
+import { renderAutoReply, renderContactEmail, sendMail } from "@/lib/mailer";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
+
+/** Valid submissions allowed per client IP per window. */
+const CONTACT_LIMIT = { limit: 3, windowMs: 10 * 60 * 1000 } as const;
+/** Auto-replies per recipient address — stops the form being used to mail-bomb a third party. */
+const AUTO_REPLY_LIMIT = { limit: 1, windowMs: 24 * 60 * 60 * 1000 } as const;
 
 export type ContactState = {
   success?: boolean;
@@ -64,59 +72,48 @@ export async function submitContact(
     };
   }
 
-  const from = process.env.CONTACT_FROM;
-  const to = process.env.CONTACT_TO;
-  if (!from || !to) {
+  // Throttle after validation so typo-fix resubmits don't count, but
+  // before SMTP so floods can't burn the Gmail sending quota.
+  const limited = rateLimit(`contact:${clientIp(await headers())}`, CONTACT_LIMIT);
+  if (!limited.ok) {
+    const minutes = Math.max(1, Math.ceil(limited.retryAfterSeconds / 60));
     return {
       success: false,
-      message:
-        "Email transport is not configured on the server. Please try again later.",
+      message: `You've sent a few messages already — please wait about ${minutes} minute${minutes === 1 ? "" : "s"} before trying again, or reach me on LinkedIn.`,
       inputs: echo,
     };
   }
 
-  try {
-    const mailer = getMailer();
-    const html = `<!doctype html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;">
-      <h2 style="margin:0 0 12px;">New portfolio inquiry</h2>
-      <p style="margin:0 0 4px;"><strong>From:</strong> ${escapeHtml(parsed.data.name)} &lt;${escapeHtml(parsed.data.email)}&gt;</p>
-      <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
-      <p style="white-space:pre-wrap;margin:0;">${escapeHtml(parsed.data.message)}</p>
-    </body></html>`;
+  const result = await sendMail({
+    ...renderContactEmail(parsed.data),
+    replyTo: parsed.data.email,
+  });
 
-    await mailer.sendMail({
-      from: `"Portfolio Contact" <${from}>`,
-      to,
-      replyTo: parsed.data.email,
-      subject: `Portfolio inquiry from ${parsed.data.name}`,
-      text: `From: ${parsed.data.name} <${parsed.data.email}>\n\n${parsed.data.message}`,
-      html,
+  if (!result.ok) {
+    return {
+      success: false,
+      message:
+        result.error.code === "CONFIG"
+          ? "Email transport is not configured on the server. Please try again later."
+          : "Server encountered an error sending your message. Please try again later or reach me on LinkedIn.",
+      inputs: echo,
+    };
+  }
+
+  // Confirmation to the sender runs after the response is sent, so it
+  // never delays the form or turns a delivered message into an error.
+  const { email: senderEmail, name: senderName, message: senderMessage } = parsed.data;
+  after(async () => {
+    if (!rateLimit(`auto-reply:${senderEmail.toLowerCase()}`, AUTO_REPLY_LIMIT).ok) return;
+    const reply = await sendMail({
+      ...renderAutoReply({ name: senderName, message: senderMessage }),
+      to: senderEmail,
     });
+    if (!reply.ok) console.warn("[submitContact] auto-reply failed", { code: reply.error.code });
+  });
 
-    return {
-      success: true,
-      message: "Thanks — your message has been transmitted successfully.",
-    };
-  } catch (error) {
-    console.error("[submitContact] mailer error:", error);
-    return {
-      success: false,
-      message:
-        "Server encountered an error sending your message. Please try again later or reach me on LinkedIn.",
-      inputs: echo,
-    };
-  }
-}
-
-/**
- * Minimal HTML escaper for user-provided content embedded in the
- * outbound email body. We never render this HTML in the browser.
- */
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return {
+    success: true,
+    message: "Thanks — your message has been transmitted successfully. A confirmation is on its way to your inbox.",
+  };
 }

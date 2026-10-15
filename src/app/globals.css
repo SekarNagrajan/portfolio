@@ -2,7 +2,7 @@
 
 /* ------------------------------------------------------------------
    Design tokens — dark-mode default, oklch palette.
-   Shadcn-style HSL-less semantic variables mapped to Tailwind v4
+   Shadcn-style semantic variables mapped to Tailwind v4 via
    @theme inline so utilities like `bg-background`, `text-foreground`,
    `border-border` resolve automatically.
    ------------------------------------------------------------------ */
@@ -10,60 +10,81 @@
   color-scheme: dark;
 
   /* Core surface + ink */
-  --background: oklch(0.145 0.005 285);     /* near-black with cool bias */
-  --foreground: oklch(0.985 0.002 285);     /* near-white */
+  --background: oklch(0.13 0.008 280);
+  --foreground: oklch(0.985 0.002 285);
 
-  --card: oklch(0.17 0.006 285);
+  --card: oklch(0.165 0.01 280);
   --card-foreground: oklch(0.985 0.002 285);
 
-  --popover: oklch(0.17 0.006 285);
+  --popover: oklch(0.17 0.01 280);
   --popover-foreground: oklch(0.985 0.002 285);
 
-  --muted: oklch(0.22 0.006 285);
-  --muted-foreground: oklch(0.72 0.015 285);
+  --muted: oklch(0.22 0.01 280);
+  --muted-foreground: oklch(0.72 0.015 280);
 
-  /* Accent — subtle indigo/cyan hybrid for a technical, premium feel */
-  --accent: oklch(0.72 0.14 240);
+  /* Single brand accent — every highlight, glow, and gradient derives from it */
+  --accent: oklch(0.76 0.14 225);
   --accent-foreground: oklch(0.145 0.005 285);
 
   --primary: oklch(0.985 0.002 285);
   --primary-foreground: oklch(0.145 0.005 285);
 
-  --secondary: oklch(0.22 0.006 285);
+  --secondary: oklch(0.22 0.01 280);
   --secondary-foreground: oklch(0.985 0.002 285);
 
-  --destructive: oklch(0.62 0.21 25);
+  --destructive: oklch(0.65 0.21 25);
   --destructive-foreground: oklch(0.985 0.002 285);
 
-  --border: oklch(0.27 0.008 285);
-  --input: oklch(0.27 0.008 285);
-  --ring: oklch(0.72 0.14 240);
+  --border: oklch(0.27 0.012 280);
+  --input: oklch(0.27 0.012 280);
+  --ring: oklch(0.76 0.14 225);
 
-  --radius: 0.75rem;
+  --radius: 0.875rem;
+  --nav-height: 4.5rem;
+  /* Bottom tab bar. Zero from the lg breakpoint up — see the media query below. */
+  --tab-bar-height: 3.5rem;
+
+  /* Glassmorphism — frosted surfaces over the aurora background */
+  --glass-bg: color-mix(in oklab, var(--card) 62%, transparent);
+  --glass-bg-strong: color-mix(in oklab, var(--card) 82%, transparent);
+  --glass-border: color-mix(in oklab, var(--border) 80%, transparent);
+  --glass-blur: 12px;
+  --glass-blur-strong: 20px;
+  --glass-saturate: 140%;
+  --shadow-glass: 0 10px 40px -16px rgb(0 0 0 / 0.45), 0 0 40px -20px var(--accent);
+  --shadow-glass-lg: 0 30px 80px -20px rgb(0 0 0 / 0.7), 0 0 60px -20px var(--accent);
 }
 
 /* Light-mode opt-in (not the default, but respected if `html` class flips). */
 .light {
   color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0.005 285);
+  --background: oklch(0.99 0.002 280);
+  --foreground: oklch(0.16 0.01 280);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.005 285);
+  --card-foreground: oklch(0.16 0.01 280);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.005 285);
-  --muted: oklch(0.96 0.002 285);
-  --muted-foreground: oklch(0.45 0.012 285);
-  --accent: oklch(0.55 0.18 250);
+  --popover-foreground: oklch(0.16 0.01 280);
+  --muted: oklch(0.96 0.004 280);
+  --muted-foreground: oklch(0.45 0.015 280);
+  --accent: oklch(0.53 0.16 240); /* ≥4.5:1 on background (WCAG AA) */
   --accent-foreground: oklch(0.985 0.002 285);
-  --primary: oklch(0.145 0.005 285);
+  --primary: oklch(0.16 0.01 280);
   --primary-foreground: oklch(0.985 0.002 285);
-  --secondary: oklch(0.96 0.002 285);
-  --secondary-foreground: oklch(0.145 0.005 285);
-  --destructive: oklch(0.62 0.21 25);
-  --destructive-foreground: oklch(0.985 0.002 285);
-  --border: oklch(0.9 0.004 285);
-  --input: oklch(0.9 0.004 285);
-  --ring: oklch(0.55 0.18 250);
+  --secondary: oklch(0.96 0.004 280);
+  --secondary-foreground: oklch(0.16 0.01 280);
+  --border: oklch(0.9 0.006 280);
+  --input: oklch(0.9 0.006 280);
+  --ring: oklch(0.53 0.16 240);
+
+  /* Frosted white panels — higher fill so text stays readable over aurora */
+  --glass-bg: color-mix(in oklab, var(--card) 78%, transparent);
+  --glass-bg-strong: color-mix(in oklab, var(--card) 92%, transparent);
+  --glass-border: color-mix(in oklab, var(--border) 70%, transparent);
+  --glass-blur: 14px;
+  --glass-blur-strong: 22px;
+  --glass-saturate: 130%;
+  --shadow-glass: 0 10px 40px -18px rgb(0 0 0 / 0.12), 0 0 36px -18px color-mix(in oklab, var(--accent) 45%, transparent);
+  --shadow-glass-lg: 0 28px 70px -24px rgb(0 0 0 / 0.18), 0 0 50px -20px color-mix(in oklab, var(--accent) 40%, transparent);
 }
 
 @theme inline {
@@ -87,18 +108,139 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-spin-slow: spin 24s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-dash: dash 0.9s linear infinite;
+  --animate-marquee: marquee var(--marquee-duration, 40s) linear infinite;
+
+  @keyframes aurora {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(6%, -4%, 0) scale(1.08); }
+    100% { transform: translate3d(-5%, 5%, 0) scale(0.96); }
+  }
+  /* Pairs with pathLength="100" + stroke-dasharray "2 3" (period 5). */
+  /* Track holds two copies of its content, so -50% loops seamlessly. */
+  @keyframes marquee {
+    to { transform: translate3d(-50%, 0, 0); }
+  }
+  @keyframes dash {
+    to { stroke-dashoffset: -10; }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -10px, 0); }
+  }
 }
 
-/* Global typography + behavior ------------------------------------- */
+/* ------------------------------------------------------------------
+   Layout utilities
+   ------------------------------------------------------------------ */
+
+/* Wide, edge-aware page shell — fills large screens instead of a
+   narrow centred column, with gutters that scale with the viewport. */
+@utility shell {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1800px;
+  padding-inline: clamp(1.25rem, 4vw, 4rem);
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--foreground) 10%,
+    var(--accent) 45%,
+    color-mix(in oklab, var(--accent) 70%, var(--foreground)) 75%,
+    var(--foreground) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Hairline grid with a radial fade — the page "graph paper". */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Glassy surfaces — intensity scale over shared CSS variables. */
+@utility glass-sm {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+}
+
+@utility glass {
+  background: color-mix(in oklab, var(--glass-bg) 50%, var(--glass-bg-strong));
+  backdrop-filter: blur(16px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(16px) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+}
+
+@utility glass-lg {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+}
+
+@utility shadow-glass {
+  box-shadow: var(--shadow-glass);
+}
+
+@utility shadow-glass-lg {
+  box-shadow: var(--shadow-glass-lg);
+}
+
+/* Opaque fallback when backdrop-filter is unavailable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-sm,
+  .glass,
+  .glass-lg {
+    background: var(--glass-bg-strong);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Global typography + behavior
+   ------------------------------------------------------------------ */
 * {
   border-color: var(--border);
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --tab-bar-height: 0px;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-height) + env(safe-area-inset-top) + 1rem);
+  scroll-padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
 }
 
 html,
@@ -112,6 +254,7 @@ body {
 
 body {
   min-height: 100dvh;
+  overflow-x: clip;
 }
 
 ::selection {
@@ -128,6 +271,9 @@ body {
 
 /* Reduced motion — strip transitions + animations for sensitive users. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
@@ -135,6 +281,13 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Keep toasts above the phone tab bar. */
+@media (max-width: 63.999rem) {
+  [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 0.75rem) !important;
   }
 }
 

@@ -2,12 +2,18 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Toaster } from "sonner";
 
 import "./globals.css";
 import { Navbar } from "@/components/features/Navbar";
 import { Footer } from "@/components/features/Footer";
+import { Background } from "@/components/layout/Background";
+import { Providers } from "@/components/layout/Providers";
+import { TrackClicks } from "@/components/layout/TrackClicks";
+import { themeInitScript } from "@/components/layout/Theme";
+import { ScrollProgress } from "@/components/motion/Effects";
 import { SITE_URL, personJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { brand } from "@/lib/brand";
 import { profile } from "@/lib/data/profile";
 
 const geistSans = Geist({
@@ -38,7 +44,7 @@ export const metadata: Metadata = {
     "Sekar Nagarajan",
     "Full-Stack Software Engineer",
     "React 19",
-    "Next.js 15",
+    "Next.js 16",
     "Spring Boot 4",
     "Java 21",
     "TypeScript",
@@ -80,18 +86,17 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0b" },
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: brand.background },
+    { media: "(prefers-color-scheme: light)", color: brand.background },
   ],
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 /* ---------- Layout ---------- */
@@ -100,16 +105,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="relative flex min-h-dvh flex-col bg-background text-foreground">
+      <head>
+        {/* Apply the saved theme before first paint (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      {/* Extensions (Grammarly, password managers) inject attributes on
+          <body> before hydration; ignore those attribute-only mismatches. */}
+      <body
+        className="relative isolate flex min-h-dvh flex-col bg-background text-foreground"
+        suppressHydrationWarning
+      >
         {/* JSON-LD Person — rich-result eligibility + knowledge-graph signal. */}
-        <script
-          type="application/ld+json"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd()) }}
-        />
+        <JsonLd data={personJsonLd()} />
 
         {/* Skip-to-content for keyboard + screen-reader users. */}
         <a
@@ -119,16 +130,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
 
-        <Navbar />
+        <Providers>
+          <Background />
+          <ScrollProgress />
+          <Navbar />
 
-        <main id="main" className="flex-1">
-          {children}
-        </main>
+          <main id="main" className="flex-1">
+            {children}
+          </main>
 
-        <Footer />
+          <Footer />
+        </Providers>
 
-        <Toaster theme="dark" position="bottom-right" richColors closeButton />
         <Analytics />
+        <TrackClicks />
         <SpeedInsights />
       </body>
     </html>

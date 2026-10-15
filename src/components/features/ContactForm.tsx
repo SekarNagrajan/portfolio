@@ -3,12 +3,14 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { track } from "@vercel/analytics";
+import { AnimatePresence, motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CheckCircleIcon, SendIcon, hoverTrigger } from "@/components/icons/AnimatedIcons";
 import {
   submitContact,
   type ContactState,
@@ -16,19 +18,23 @@ import {
 
 const initialState: ContactState = {};
 
+const MotionButton = motion.create(Button);
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button
+    <MotionButton
       type="submit"
       size="lg"
       disabled={pending}
       aria-disabled={pending}
-      className="gap-2"
+      {...hoverTrigger}
+      animate={pending ? ["rest", "hover"] : "rest"}
+      className="h-13 gap-2.5 rounded-full px-7 text-base font-semibold [&_svg]:size-[18px]"
     >
-      <Send className="size-4" />
+      <SendIcon size={18} />
       {pending ? "Sending…" : "Send message"}
-    </Button>
+    </MotionButton>
   );
 }
 
@@ -44,6 +50,7 @@ export function ContactForm() {
     if (state.success === true) {
       notifiedRef.current = state;
       toast.success(state.message ?? "Message sent.");
+      track("contact_submitted");
       formRef.current?.reset();
     } else if (state.success === false && state.message) {
       notifiedRef.current = state;
@@ -59,7 +66,7 @@ export function ContactForm() {
       ref={formRef}
       action={action}
       noValidate
-      className="space-y-5"
+      className="space-y-6"
       aria-describedby="contact-form-status"
     >
       {/* Honeypot — hidden from humans + a11y tree, bots happily fill it. */}
@@ -152,9 +159,20 @@ export function ContactForm() {
           aria-live="polite"
           className="text-sm"
         >
-          {state?.success === true && (
-            <span className="text-accent">{state.message}</span>
-          )}
+          <AnimatePresence>
+            {state?.success === true && (
+              <motion.span
+                key="ok"
+                initial="hidden"
+                animate="rest"
+                exit={{ opacity: 0 }}
+                variants={{ hidden: { opacity: 0, x: -8 }, rest: { opacity: 1, x: 0 } }}
+                className="inline-flex items-center gap-2 text-accent"
+              >
+                <CheckCircleIcon size={18} /> {state.message}
+              </motion.span>
+            )}
+          </AnimatePresence>
           {state?.success === false && !state?.errors && state?.message && (
             <span className="text-destructive">{state.message}</span>
           )}

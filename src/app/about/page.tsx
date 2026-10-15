@@ -1,11 +1,22 @@
 import Link from "next/link";
 import { Section, SectionHeader } from "@/components/features/Section";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { CountUp, SpotlightCard } from "@/components/motion/Effects";
+import { AboutHero } from "@/components/features/about/AboutHero";
+import { Journey, JourneyOverview } from "@/components/features/about/Journey";
+import { Principles } from "@/components/features/about/Principles";
+import { Credentials } from "@/components/features/about/Credentials";
+import {
+  AwardIcon,
+  BriefcaseIcon,
+  CodeIcon,
+  GlobeIcon,
+  HomeIcon,
+  ZapIcon,
+} from "@/components/icons/AnimatedIcons";
 import { profile } from "@/lib/data/profile";
-import { education, certifications } from "@/lib/data/education";
 import { experiences } from "@/lib/data/experiences";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, profilePageJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata = buildMetadata({
   title: "About",
@@ -13,140 +24,129 @@ export const metadata = buildMetadata({
   path: "/about",
 });
 
+const STATS = [
+  { to: 3, suffix: "+", label: "Years shipping production software" },
+  { to: 4, suffix: "", label: "Multi-tenant platforms shipped" },
+  { to: 40, suffix: "+", label: "Screens architected in ANCHOR" },
+  { to: 36, suffix: "", label: "Products on the platform I build for" },
+] as const;
+
 export default function AboutPage() {
   const current = experiences[0];
 
+  const nutshell = [
+    {
+      icon: CodeIcon,
+      title: "What I do",
+      body: (
+        <>
+          I design and ship full-stack enterprise platforms end to end: React 19 frontends with strict type safety and
+          design systems, Spring Boot 4 services on Java 21, and multi-datasource SQL Server underneath.
+        </>
+      ),
+    },
+    {
+      icon: GlobeIcon,
+      title: "Where I do it",
+      body: (
+        <>
+          At{" "}
+          <Link
+            href={current.companyUrl ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent underline-offset-4 hover:underline"
+          >
+            {current.company}
+          </Link>
+          , a maritime enterprise software vendor since 2003. I architect multi-tenant products for shipping lines and
+          port agents: tenant branding, RBAC across 40+ screens, and AI folded into existing workflows.
+        </>
+      ),
+    },
+    {
+      icon: ZapIcon,
+      title: "What I care about",
+      body: (
+        <>
+          The craft: tight motion design, strict Core Web Vitals, keyboard-first accessibility, and architecture that
+          holds up under production load. This site is a working example, with Server Components, Server Actions and
+          forms that submit even without JavaScript.
+        </>
+      ),
+    },
+  ];
+
   return (
     <>
+      <JsonLd data={[breadcrumbJsonLd([{ name: "About", path: "/about" }]), profilePageJsonLd()]} />
+
+      <AboutHero />
+
+      {/* In a nutshell + numbers */}
       <Section id="about-intro">
-        <SectionHeader
-          eyebrow="About"
-          title={`Hi, I'm ${profile.firstName}.`}
-          description={profile.summary}
-        />
-
-        <div className="grid gap-10 md:grid-cols-[1.5fr,1fr]">
-          <div className="space-y-6 text-base leading-relaxed text-foreground/90">
-            <p>
-              I design and ship full-stack enterprise platforms end-to-end —
-              from React 19 frontends with strict type safety and
-              component-driven design systems, to Spring Boot 4 services on
-              Java 21 running against multi-datasource SQL Server deployments.
-            </p>
-            <p>
-              Day to day I architect multi-tenant SaaS products at{" "}
-              <Link
-                href={current.companyUrl ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-accent hover:underline"
-              >
-                {current.company}
-              </Link>
-              , a maritime enterprise system vendor shipping software for
-              shipping lines since 2003. The problems look like: tenant
-              branding at scale, RBAC + module gating across 40+ screens,
-              streaming high-cardinality operational data into AG Grid, and
-              folding AI (OpenAI, Google Cloud Vision, N8N) into existing
-              workflows without breaking them.
-            </p>
-            <p>
-              I care deeply about the craft — pixel-tight motion design,
-              strict Core Web Vitals, keyboard-first accessibility, and
-              architecture that holds up under production load. The portfolio
-              you&apos;re reading is a working example: Next.js 15 Server
-              Components, zero-boilerplate React 19 Server Actions, a Tailwind
-              v4 oklch design system, and progressive-enhancement forms that
-              submit even with JavaScript disabled.
-            </p>
-          </div>
-
-          <aside className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Based in
-              </h3>
-              <p className="mt-2 text-lg font-medium text-foreground">
-                {profile.location}
-              </p>
-              <h3 className="mt-5 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Reach me
-              </h3>
-              <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                <li>
-                  <Link
-                    href={profile.socials.email}
-                    className="hover:text-foreground"
-                  >
-                    {profile.email}
-                  </Link>
-                </li>
-                <li>{profile.phone}</li>
-              </ul>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Button asChild size="sm">
-                  <Link href="/contact">Say hello</Link>
-                </Button>
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/resume">View resume</Link>
-                </Button>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </Section>
-
-      <Section id="education" className="border-t border-border/60">
-        <SectionHeader
-          eyebrow="Education"
-          title="Foundations in Computer Science and Engineering."
-        />
-        <ul className="space-y-6">
-          {education.map((ed) => (
-            <li
-              key={ed.id}
-              className="flex flex-col gap-1 rounded-xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between"
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {ed.degree}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {ed.institution} · {ed.location}
-                </p>
-              </div>
-              <div className="flex flex-col items-start gap-1 sm:items-end">
-                <span className="font-mono text-sm text-muted-foreground">
-                  {ed.period}
+        <div className="grid gap-5 md:grid-cols-3">
+          {nutshell.map(({ icon: Icon, title, body }, i) => (
+            <SpotlightCard key={title} index={i} className="flex flex-col p-7 sm:p-8">
+              <div className="flex items-center gap-3">
+                <span className="grid size-11 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
+                  <Icon size={20} strokeWidth={1.75} />
                 </span>
-                <Badge variant="accent">{ed.score}</Badge>
+                <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
               </div>
-            </li>
+              <p className="mt-5 text-pretty leading-relaxed text-foreground/80">{body}</p>
+            </SpotlightCard>
           ))}
-        </ul>
+        </div>
+
+        <dl className="glass mt-5 grid grid-cols-2 divide-border/60 overflow-hidden rounded-2xl lg:grid-cols-4 lg:divide-x">
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              className={`relative p-6 sm:p-8 ${i % 2 ? "border-l border-border/60 lg:border-l-0" : ""} ${i < 2 ? "border-b border-border/60 lg:border-b-0" : ""}`}
+            >
+              <dd className="text-4xl font-semibold tracking-tight text-gradient sm:text-5xl">
+                <CountUp to={s.to} suffix={s.suffix} />
+              </dd>
+              <dt className="mt-2 text-sm text-muted-foreground">{s.label}</dt>
+            </div>
+          ))}
+        </dl>
       </Section>
 
-      <Section id="certifications" className="border-t border-border/60">
+      <Section id="journey">
         <SectionHeader
-          eyebrow="Certifications"
-          title="Formal training and continuing education."
+          eyebrow="My journey"
+          icon={<BriefcaseIcon size={14} trigger="self" />}
+          title={
+            <>
+              From classroom to <span className="text-gradient">enterprise scale</span>.
+            </>
+          }
+          description="The milestones that got me here: education, my current role, and the products I've shipped along the way."
+          art={<JourneyOverview />}
         />
-        <ul className="space-y-4">
-          {certifications.map((c) => (
-            <li
-              key={c.id}
-              className="flex flex-col gap-1 rounded-xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <h3 className="font-medium text-foreground">{c.title}</h3>
-                <p className="text-sm text-muted-foreground">{c.issuer}</p>
-              </div>
-              <span className="font-mono text-sm text-muted-foreground">
-                {c.period}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <Journey />
+      </Section>
+
+      <Section id="principles">
+        <SectionHeader
+          eyebrow="Principles"
+          icon={<HomeIcon size={14} trigger="self" />}
+          title="How I work."
+          description="Four habits I bring to every team, and where each one shows up in my actual work."
+        />
+        <Principles />
+      </Section>
+
+      <Section id="education">
+        <SectionHeader
+          eyebrow="Credentials"
+          icon={<AwardIcon size={14} trigger="self" />}
+          title="Foundations in CS."
+          description="A computer science degree and focused training in the stack I use every day."
+        />
+        <Credentials />
       </Section>
     </>
   );

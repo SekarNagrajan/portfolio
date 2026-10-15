@@ -56,10 +56,13 @@ export function buildMetadata(opts: {
  * Rich result eligibility for Google and semantic linking to GitHub +
  * LinkedIn for knowledge graph assembly.
  */
+const PERSON_ID = `${SITE_URL}/#person`;
+
 export function personJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
+    "@id": PERSON_ID,
     name: profile.name,
     url: SITE_URL,
     jobTitle: profile.title,
@@ -84,7 +87,7 @@ export function personJsonLd() {
     sameAs: [profile.socials.github, profile.socials.linkedin],
     knowsAbout: [
       "React 19",
-      "Next.js 15",
+      "Next.js 16",
       "TypeScript",
       "Spring Boot 4",
       "Java 21",
@@ -93,5 +96,43 @@ export function personJsonLd() {
       "Enterprise Design Systems",
       "AI Workflow Automation",
     ],
+  } as const;
+}
+
+/** `BreadcrumbList` for an inner route: Home › … › current page. */
+export function breadcrumbJsonLd(trail: readonly { name: string; path: string }[]) {
+  const items = [{ name: "Home", path: "/" }, ...trail];
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: new URL(item.path, SITE_URL).toString(),
+    })),
+  } as const;
+}
+
+/** `ProfilePage` for /about — tells search engines the page is about the Person. */
+export function profilePageJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: new URL("/about", SITE_URL).toString(),
+    mainEntity: { "@id": PERSON_ID },
+  } as const;
+}
+
+/** `CreativeWork` for a project case study, credited to the Person. */
+export function caseStudyJsonLd(p: { title: string; description: string; path: string; keywords: readonly string[] }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: p.title,
+    description: p.description,
+    url: new URL(p.path, SITE_URL).toString(),
+    keywords: p.keywords.join(", "),
+    creator: { "@id": PERSON_ID },
   } as const;
 }

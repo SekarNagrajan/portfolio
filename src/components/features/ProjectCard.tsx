@@ -1,126 +1,129 @@
 "use client";
 
-import { useRef } from "react";
+import type { ComponentType } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import { ExternalLink } from "lucide-react";
-import { GithubIcon } from "@/components/icons/BrandIcons";
-import { Badge } from "@/components/ui/badge";
-import { fadeUp, spring } from "@/lib/motion";
+import { SpotlightCard } from "@/components/motion/Effects";
+import { GlassChip, GlassIconBadge } from "@/components/ui/glass";
+import {
+  ArrowUpRightIcon,
+  CheckCircleIcon,
+  GithubIcon,
+  GlobeIcon,
+  LayersIcon,
+  ShieldIcon,
+  SparklesIcon,
+  type AnimatedIconProps,
+} from "@/components/icons/AnimatedIcons";
 import type { Project } from "@/lib/data/projects";
+import { cn } from "@/lib/utils";
+
+const PROJECT_ICONS: Record<string, ComponentType<AnimatedIconProps>> = {
+  crm: SparklesIcon,
+  anchor: GlobeIcon,
+  "pams-ecommerce": LayersIcon,
+  "pams-legacy": ShieldIcon,
+};
 
 /**
- * Interactive project card.
- * - Mouse-tracked radial spotlight via CSS variables mutated on the DOM
- *   directly (no React re-renders) — stays on the GPU compositor.
- * - Spring hover lift on `transform: translateY` only.
- * - Entrance via `fadeUp` when scrolled into view.
+ * Project card — spotlight surface with a draw-in domain icon, numbered
+ * index, highlight checklist, and tech chips. Hovering anywhere on the
+ * card animates every icon inside it.
  */
-export function ProjectCard({ project }: { project: Project }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const el = cardRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    el.style.setProperty("--mouse-x", `${x}px`);
-    el.style.setProperty("--mouse-y", `${y}px`);
-  };
+export function ProjectCard({
+  project,
+  index = 0,
+  compact = false,
+}: {
+  project: Project;
+  index?: number;
+  compact?: boolean;
+}) {
+  const Icon = PROJECT_ICONS[project.id] ?? LayersIcon;
+  const highlights = project.highlights.slice(0, compact ? 3 : 5);
 
   return (
-    <motion.article
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      variants={reduce ? undefined : fadeUp}
-      initial={reduce ? undefined : "hidden"}
-      whileInView={reduce ? undefined : "show"}
-      viewport={{ once: true, margin: "-80px" }}
-      whileHover={reduce ? undefined : { y: -4 }}
-      transition={spring.snappy}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-7 shadow-sm transition-colors hover:border-border/80"
-      style={{ willChange: "transform" }}
-    >
-      {/* Mouse-tracked radial spotlight — zero React re-renders. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background:
-            "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), color-mix(in oklab, var(--accent) 10%, transparent), transparent 40%)",
-        }}
-      />
-      {/* Hairline inner ring that lights up on hover. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-transparent transition-colors duration-300 group-hover:ring-accent/20"
-      />
-
-      <div className="relative z-10 flex h-full flex-col">
-        <header className="flex flex-col gap-1.5">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent">
-            {project.domain}
-          </p>
-          <h3 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {project.title}
-          </h3>
-          <p className="text-sm text-muted-foreground">{project.period}</p>
-        </header>
-
-        <p className="mt-4 text-base leading-relaxed text-foreground/85">
-          {project.tagline}
-        </p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {project.description}
-        </p>
-
-        <ul className="mt-5 flex flex-1 flex-col gap-2 text-sm text-muted-foreground">
-          {project.highlights.slice(0, 3).map((h) => (
-            <li key={h} className="flex gap-2">
-              <span
-                aria-hidden
-                className="mt-2 inline-block h-1 w-1 flex-none rounded-full bg-accent/70"
-              />
-              <span className="leading-relaxed">{h}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-5 flex flex-wrap gap-1.5">
-          {project.techStack.map((t) => (
-            <Badge key={t} variant="tech">
-              {t}
-            </Badge>
-          ))}
+    <SpotlightCard as="article" index={index} className="flex h-full flex-col p-7 sm:p-8">
+      <header className="flex items-start justify-between gap-6">
+        <GlassIconBadge size="md" className="shadow-glass">
+          <Icon size={26} strokeWidth={1.75} />
+        </GlassIconBadge>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-sm text-muted-foreground/70">{String(index + 1).padStart(2, "0")}</span>
+          <span className="grid size-10 place-items-center rounded-full border border-border/70 text-muted-foreground transition-colors group-hover:border-accent/60 group-hover:bg-accent group-hover:text-accent-foreground">
+            <ArrowUpRightIcon size={16} />
+          </span>
         </div>
+      </header>
 
-        {(project.githubUrl || project.liveUrl) && (
-          <div className="mt-6 flex items-center gap-4 border-t border-border/60 pt-4">
-            {project.githubUrl && (
-              <Link
-                href={project.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <GithubIcon size={16} /> Source
-              </Link>
-            )}
-            {project.liveUrl && (
-              <Link
-                href={project.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ExternalLink className="size-4" /> Live demo
-              </Link>
-            )}
-          </div>
-        )}
+      <div className="mt-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">{project.domain}</p>
+        <h3 className="mt-2 text-balance text-2xl font-semibold tracking-tight text-foreground xl:text-[1.65rem]">
+          {/* Stretched link: the title is the accessible link; ::after covers the card. */}
+          <Link
+            href={`/projects/${project.id}`}
+            data-track="case_study_open"
+            data-track-label={project.id}
+            className="outline-none after:absolute after:inset-0 after:z-0 after:rounded-[inherit] after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-ring"
+          >
+            {project.title}
+          </Link>
+        </h3>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">{project.period}</p>
       </div>
-    </motion.article>
+
+      <p className="mt-5 text-pretty text-base leading-relaxed text-foreground/85">{project.tagline}</p>
+      {!compact && (
+        <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">{project.description}</p>
+      )}
+
+      <ul className="mt-6 flex flex-1 flex-col gap-2.5 text-sm text-muted-foreground">
+        {highlights.map((h) => (
+          <li key={h} className="flex gap-3">
+            <CheckCircleIcon size={16} className="mt-0.5 text-accent" />
+            <span className="leading-relaxed">{h}</span>
+          </li>
+        ))}
+      </ul>
+
+      <ul className="mt-7 flex flex-wrap gap-1.5 border-t border-border/60 pt-5">
+        {project.techStack.map((t) => (
+          <li key={t}>
+            <GlassChip size="md" className="transition-colors group-hover:border-border">
+              {t}
+            </GlassChip>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent">
+        Read the case study
+        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+      </p>
+
+      {(project.githubUrl || project.liveUrl) && (
+        <div className="relative z-10 mt-6 flex items-center gap-4">
+          {project.githubUrl && (
+            <Link
+              href={project.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn("inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground")}
+            >
+              <GithubIcon size={16} /> Source
+            </Link>
+          )}
+          {project.liveUrl && (
+            <Link
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <ArrowUpRightIcon size={16} /> Live demo
+            </Link>
+          )}
+        </div>
+      )}
+    </SpotlightCard>
   );
 }

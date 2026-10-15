@@ -1,38 +1,68 @@
 # Sekar Nagarajan — Professional Portfolio
 
-A modern, server-first portfolio for a full-stack software engineer. Built on
-Next.js 15 (App Router) + React 19 Server Components with Tailwind v4,
-Shadcn-style primitives, Motion (spring physics), Zod, and Nodemailer over
-Gmail SMTP for the contact pipeline.
+A server-first portfolio for a full-stack software engineer. Built on
+Next.js 16 (App Router, Cache Components) + React 19 Server Components with
+Tailwind v4, Motion, Zod, and Nodemailer over Gmail SMTP for the contact
+pipeline.
 
 ## Stack
 
-| Layer           | Choice                                            |
-| --------------- | ------------------------------------------------- |
-| Framework       | Next.js 16 (App Router, Turbopack, Cache Components) |
-| UI runtime      | React 19 Server Components + Server Actions       |
-| Styling         | Tailwind CSS v4 with `@theme inline` oklch tokens |
-| Primitives      | Shadcn-style (Radix Slot / Label) + CVA variants  |
-| Motion          | `motion` package via `motion/react` (spring)      |
-| Validation      | Zod                                               |
-| Email           | Nodemailer over Gmail SMTP (465 SSL, pooled)      |
-| Analytics       | `@vercel/analytics` + `@vercel/speed-insights`    |
-| Icons           | Lucide (generics) + inline brand SVGs             |
+| Layer           | Choice                                                        |
+| --------------- | ------------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router, Turbopack, Cache Components)          |
+| UI runtime      | React 19 Server Components + Server Actions                   |
+| Styling         | Tailwind CSS v4, `@theme inline` oklch tokens, light/dark     |
+| Motion          | `motion/react` — springs, scroll-linked effects, layout anims |
+| Icons           | Custom animated SVG set + Simple Icons logos (CC0, vendored)  |
+| Validation      | Zod (form schema + mail env config)                           |
+| Email           | Nodemailer over Gmail SMTP (pooled, timeouts, typed errors)   |
+| Analytics       | `@vercel/analytics` (+ custom events) + Speed Insights        |
 
 ## Routes
 
 ```
-/            Hero + featured projects + signature stack
-/about       Narrative + education + certifications
-/skills      Grouped skill matrix with staggered reveal
-/projects    4 interactive project cards (CRM, ANCHOR, PAMS E-Commerce, PAMS Legacy)
-/experience  Server-rendered timeline (Solverminds employer context)
-/resume      Embedded PDF preview + direct download
-/contact     Zod-validated form over SMTP, progressive-enhancement
-/api/og      Dynamic Open Graph image renderer (next/og ImageResponse)
-/sitemap.xml Next.js auto-sitemap
-/robots.txt  Next.js robots config
+/                    Hero (logo orbit) + tabbed tech stack + featured work + capabilities
+/about               Story, profile card, principles, education, certifications
+/skills              Bento skill matrix by layer
+/projects            Project cards → case studies
+/projects/[slug]     Case study: problem → approach → architecture → impact → stack
+/experience          Scroll-linked timeline
+/resume              Embedded PDF preview + download
+/contact             Zod-validated form → SMTP, rate-limited, auto-reply
+/api/og              Dynamic Open Graph image (next/og, Geist font)
+/icon, /apple-icon   Generated "SN" app icons
+/manifest.webmanifest, /sitemap.xml, /robots.txt
 ```
+
+Plus a custom 404 (`app/not-found.tsx`) and error boundary (`app/error.tsx`).
+
+## Features
+
+- **⌘K command palette** (`⌘K` / `Ctrl K` / `/`) — fuzzy search over pages,
+  case studies, technologies, and actions (copy email, download CV, theme).
+- **Theme** — dark / light / system, persisted, applied by an inline head
+  script before first paint (no flash). Light accent tuned to WCAG AA.
+- **Contact hardening** — honeypot, per-IP rate limit (3 / 10 min), and an
+  auto-reply sent via `after()` (capped at 1 per recipient per day).
+- **Security headers** — CSP, HSTS, `X-Frame-Options`, `nosniff`,
+  `Referrer-Policy`, `Permissions-Policy` (see `next.config.ts`).
+- **SEO** — per-route canonical + OG image, JSON-LD (`Person`,
+  `ProfilePage`, `BreadcrumbList`, `CreativeWork` per case study).
+- **Analytics events** — `cv_download`, `cv_open`, `cv_cta`,
+  `contact_submitted`, `profile_click`, `case_study_open`, `email_copied`.
+  Add `data-track="name"` (+ optional `data-track-label`) to any element.
+
+## Editing content
+
+| What                       | Where                                   |
+| -------------------------- | --------------------------------------- |
+| Name, links, availability  | `src/lib/data/profile.ts`               |
+| Projects (cards)           | `src/lib/data/projects.ts`              |
+| Case-study long form       | `src/lib/data/case-studies.ts`          |
+| Home tech-stack tiles      | `src/lib/data/stack.ts`                 |
+| Skill matrix               | `src/lib/data/skills.ts`                |
+| Experience / education     | `src/lib/data/experiences.ts`, `education.ts` |
+| Brand colours (non-CSS)    | `src/lib/brand.ts` (mirror of `globals.css` tokens) |
 
 ## Local setup
 
@@ -54,7 +84,7 @@ npm run dev
 
 | Variable                | Purpose                                               |
 | ----------------------- | ----------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`  | Absolute origin — required for OG + sitemap           |
+| `NEXT_PUBLIC_SITE_URL`  | Absolute origin — required for OG + sitemap. Falls back to `http://localhost:3000` when unset. |
 | `SMTP_HOST`             | `smtp.gmail.com`                                      |
 | `SMTP_PORT`             | `465` (SSL) or `587` (STARTTLS)                       |
 | `SMTP_SECURE`           | `true` for 465, `false` for 587                       |
@@ -62,6 +92,11 @@ npm run dev
 | `SMTP_PASS`             | 16-character **Gmail App Password** (not account pwd) |
 | `CONTACT_FROM`          | Sender address (must equal `SMTP_USER` for Gmail)     |
 | `CONTACT_TO`            | Where inquiries are delivered (your inbox)            |
+| `CONTACT_FROM_NAME`     | Optional display name (default "Portfolio Contact")   |
+
+`SMTP_SECURE` is optional — it defaults to `true` on port 465 and STARTTLS
+otherwise. All mail variables are validated together on first use
+(`src/lib/mailer/config.ts`), so a misconfiguration lists every bad field.
 
 ### Gmail App Password walkthrough
 
@@ -90,27 +125,28 @@ Password flow above.
 | `npm run build` | Production build with route pre-rendering          |
 | `npm start`     | Serve the production build                         |
 | `npm run lint`  | ESLint across the project                          |
+| `npm test`      | Unit tests for the contact schema, mail escaping, and rate limiter |
+| `npm run mail:verify` | Open the SMTP connection without sending a message. Prints `mail: ok` or an error code such as `CONFIG` when `.env.local` is missing. |
 
 ## Architecture notes
 
-- **Server-first.** Every page and layout is a Server Component. The only
-  client leaves are `Navbar`, `Hero`, `SkillBadge`, `SkillGroupList`,
-  `TimelineItem`, `ProjectCard`, `ResumeViewer`, `ContactForm`.
-- **No data fetching hooks.** Static TypeScript modules in `src/lib/data/`
-  are imported by Server Components. Zero runtime cost, zero bundle impact.
-- **Server Actions.** `src/lib/actions/contact.ts` validates with Zod,
-  checks a honeypot, and dispatches via a module-scoped Nodemailer pool
-  (`src/lib/mailer.ts`, guarded by `import "server-only"`). The form uses
-  `<form action={serverAction}>` so submissions still work with JavaScript
-  disabled.
-- **Motion.** Only `transform` + `opacity` are animated — hardware-accelerated
-  on the GPU compositor so no browser reflows occur. `useReducedMotion` is
-  wired into every interactive leaf and a CSS fallback strips animations
-  entirely when the OS prefers reduced motion.
-- **SEO.** `metadataBase` resolves absolute URLs. Every route exports
-  `generateMetadata` via `buildMetadata()`, which points its OG image at
-  `/api/og?title=...` — a `next/og` `ImageResponse` renderer. A `Person`
-  JSON-LD schema is injected on the root layout.
+- **Server-first.** Pages are Server Components that import static data
+  from `src/lib/data/`. Interactivity lives in client leaves under
+  `src/components/features`, `src/components/motion`, and
+  `src/components/layout` (theme, palette, providers).
+- **Mailer.** `src/lib/mailer/` — Zod-validated config, a pooled transport
+  singleton (survives dev HMR), typed `MailerError`s, and `sendMail()`
+  returning a result object instead of throwing. Templates in
+  `src/lib/mailer/templates/`.
+- **Server Action.** `src/lib/actions/contact.ts`: honeypot → Zod →
+  rate limit → send → `after()` auto-reply. Works with JavaScript disabled.
+- **Motion.** Transform/opacity/filter/pathLength only. Animated icons
+  respond to `hidden` / `rest` / `hover` variant labels cascading from a
+  parent (`hoverTrigger` / `revealTrigger` in `src/lib/motion.ts` — kept
+  out of `"use client"` files so Server Components can spread them).
+  `MotionConfig reducedMotion="user"` + a CSS fallback honour the OS setting.
+- **Rate limiting** is in-memory per server instance (`src/lib/rate-limit.ts`).
+  For multi-instance hosting, back it with Upstash Redis / Vercel KV.
 
 ## Resume PDF
 
