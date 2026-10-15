@@ -44,7 +44,13 @@ const ACHIEVEMENTS: readonly Achievement[] = job.achievements.map((text, i) => (
 }));
 
 const family = (t: string) => t.replace(/\s+\d+(\.\d+)?$/, "").toLowerCase();
-const mentions = (text: string, tech: string) => text.toLowerCase().includes(family(tech));
+
+/** Role tools behind an achievement: named in the sentence, or in its product's stack. */
+function toolsFor(a: Achievement): Set<string> {
+  const stack = projects.find((p) => p.id === a.product.id)?.techStack.map(family) ?? [];
+  const text = a.text.toLowerCase();
+  return new Set(job.technologies.filter((t) => text.includes(family(t)) || stack.includes(family(t))));
+}
 
 /** Bold the numbers that carry weight: "~80%", "40+", "~20%". */
 function Emphasis({ text }: { text: string }) {
@@ -243,7 +249,7 @@ function InsideTheRole() {
     ...PRODUCT_RULES.map((r) => ({ id: r.id, label: r.label, n: ACHIEVEMENTS.filter((a) => a.product.id === r.id).length })),
   ];
   const list = ACHIEVEMENTS.map((a, i) => ({ ...a, i })).filter((a) => product === "all" || a.product.id === product);
-  const focusText = hover !== null ? ACHIEVEMENTS[hover].text : list.map((a) => a.text).join(" ");
+  const focusTools = new Set((hover !== null ? [ACHIEVEMENTS[hover]] : list).flatMap((a) => [...toolsFor(a)]));
 
   return (
     <section id="experience" className="shell relative scroll-mt-24 py-16 sm:py-24">
@@ -254,7 +260,7 @@ function InsideTheRole() {
           </p>
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">What I&apos;ve shipped at {job.company.split(" ")[0]}.</h2>
           <p className="mt-2 max-w-xl text-pretty text-muted-foreground">
-            Pick a product to focus. Hover an achievement to light up the tools it used.
+            Pick a product to focus. Hover or tap an achievement to light up the tools behind it.
           </p>
         </div>
         <LayoutGroup id="exp-tabs">
@@ -351,7 +357,7 @@ function InsideTheRole() {
             </div>
             <ul className="mt-4 grid grid-cols-3 gap-2">
               {job.technologies.map((t, i) => {
-                const lit = mentions(focusText, t);
+                const lit = focusTools.has(t);
                 return (
                   <motion.li
                     key={t}
@@ -372,7 +378,7 @@ function InsideTheRole() {
                 );
               })}
             </ul>
-            <p className="mt-4 text-xs text-muted-foreground">Lit tools are named in the achievements shown.</p>
+            <p className="mt-4 text-xs text-muted-foreground">Lit tools are used in the products behind the achievements shown.</p>
           </div>
         </aside>
       </div>
@@ -432,7 +438,7 @@ function Company() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Offices</p>
             <p className="font-mono text-[10px] text-muted-foreground">{offices.length} cities · schematic</p>
           </div>
-          <div className="relative mt-3 aspect-[2/1]">
+          <div className="@container relative mt-3 aspect-[2/1]">
             <div aria-hidden className="absolute inset-0 rounded-2xl bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_14%,transparent)_1px,transparent_1.5px)] [background-size:12px_12px] [mask-image:radial-gradient(ellipse_at_center,#000_45%,transparent_85%)]" />
             <svg viewBox="0 0 400 200" className="absolute inset-0 size-full overflow-visible" aria-hidden>
               {offices.slice(1).map((o, i) => {
@@ -489,6 +495,8 @@ function Company() {
                       "pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-colors",
                       below ? "top-5" : "bottom-5",
                       active === o.name || isHq ? "bg-accent text-accent-foreground" : "bg-card/90 text-foreground/80",
+                      // Narrow maps label only the HQ and whichever city is touched.
+                      !isHq && active !== o.name && "hidden @md:block",
                     )}
                   >
                     {o.name}

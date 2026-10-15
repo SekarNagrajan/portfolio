@@ -7,9 +7,7 @@ import { motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { profile } from "@/lib/data/profile";
-import { CommandPaletteTrigger } from "@/components/features/CommandPalette";
 import { MobileTabBar } from "@/components/features/MobileTabBar";
-import { ThemeToggle } from "@/components/layout/Theme";
 import {
   BriefcaseIcon,
   FileTextIcon,
@@ -127,22 +125,14 @@ export function Navbar() {
             </ul>
 
             <div className="flex items-center gap-1 sm:gap-2">
-              <div className="hidden xl:block">
-                <CommandPaletteTrigger />
-              </div>
-              <div className="xl:hidden">
-                <CommandPaletteTrigger compact />
-              </div>
-              <ThemeToggle className="size-11 lg:size-10" />
               <MotionLink
                 href="/contact"
                 {...hoverTrigger}
-                className="hidden h-10 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-semibold text-background transition-transform active:scale-95 lg:inline-flex"
+                className="hidden h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-foreground px-5 text-sm font-semibold text-background transition-transform active:scale-95 lg:inline-flex"
               >
                 <MailIcon size={16} />
                 Let&apos;s talk
               </MotionLink>
-
             </div>
           </div>
         </nav>

@@ -19,10 +19,11 @@ type Resolved = "light" | "dark";
 const STORAGE_KEY = "theme";
 
 /**
- * Inline, render-blocking script for <head>: applies the saved theme
- * before first paint so there's no dark→light flash. Mirrors `apply()`.
+ * Inline, render-blocking script for <head>: applies the OS theme before
+ * first paint so there's no dark→light flash. Mirrors `apply()`. There is
+ * no theme toggle, so a preference saved by an earlier version is cleared.
  */
-export const themeInitScript = `(()=>{try{var p=localStorage.getItem("${STORAGE_KEY}")||"system";var l=p==="light"||(p==="system"&&matchMedia("(prefers-color-scheme: light)").matches);var d=document.documentElement;d.classList.toggle("light",l);d.style.colorScheme=l?"light":"dark";}catch(e){}})();`;
+export const themeInitScript = `(()=>{try{localStorage.removeItem("${STORAGE_KEY}");var p="system";var l=p==="light"||(p==="system"&&matchMedia("(prefers-color-scheme: light)").matches);var d=document.documentElement;d.classList.toggle("light",l);d.style.colorScheme=l?"light":"dark";}catch(e){}})();`;
 
 function apply(resolved: Resolved) {
   const root = document.documentElement;
