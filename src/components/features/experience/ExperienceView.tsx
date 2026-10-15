@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion, useInView, useReducedMotion } from "motion/react";
 import { ArrowRight, Award, Building2, MapPin, Ship } from "lucide-react";
 import { CountUp } from "@/components/motion/Effects";
 import { TechLogo, logoForTech, monogramFor } from "@/components/icons/TechLogos";
@@ -10,6 +10,7 @@ import { BriefcaseIcon, DownloadIcon, MotionAnchor, hoverTrigger } from "@/compo
 import { experiences, type Experience } from "@/lib/data/experiences";
 import { projects } from "@/lib/data/projects";
 import { spring } from "@/lib/motion";
+import { ChipRail } from "@/components/ui/ChipRail";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -243,13 +244,17 @@ function InsideTheRole() {
   const reduce = useReducedMotion();
   const [product, setProduct] = useState<string>("all");
   const [hover, setHover] = useState<number | null>(null);
+  // Touch has no hover: a tap selects and PERSISTS until tapped again.
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const active = hover ?? selected;
 
   const tabs = [
     { id: "all", label: "All", n: ACHIEVEMENTS.length },
     ...PRODUCT_RULES.map((r) => ({ id: r.id, label: r.label, n: ACHIEVEMENTS.filter((a) => a.product.id === r.id).length })),
   ];
   const list = ACHIEVEMENTS.map((a, i) => ({ ...a, i })).filter((a) => product === "all" || a.product.id === product);
-  const focusTools = new Set((hover !== null ? [ACHIEVEMENTS[hover]] : list).flatMap((a) => [...toolsFor(a)]));
+  const focusTools = new Set((active !== null ? [ACHIEVEMENTS[active]] : list).flatMap((a) => [...toolsFor(a)]));
 
   return (
     <section id="experience" className="shell relative scroll-mt-24 py-16 sm:py-24">
@@ -260,11 +265,11 @@ function InsideTheRole() {
           </p>
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">What I&apos;ve shipped at {job.company.split(" ")[0]}.</h2>
           <p className="mt-2 max-w-xl text-pretty text-muted-foreground">
-            Pick a product to focus. Hover or tap an achievement to light up the tools behind it.
+            Pick a product to focus. Select an achievement to light up the tools behind it.
           </p>
         </div>
         <LayoutGroup id="exp-tabs">
-          <div role="group" aria-label="Filter by product" className="glass flex max-w-full gap-1 overflow-x-auto rounded-full p-1.5 [scrollbar-width:none]">
+          <ChipRail label="Filter by product" activeKey={product} className="glass max-w-full rounded-full p-1.5">
             {tabs.map((t) => {
               const on = t.id === product;
               return (
@@ -272,9 +277,10 @@ function InsideTheRole() {
                   key={t.id}
                   type="button"
                   aria-pressed={on}
+                  data-active={on || undefined}
                   onClick={() => setProduct(t.id)}
                   className={cn(
-                    "relative isolate inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors",
+                    "relative isolate inline-flex h-10 shrink-0 snap-start items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors pointer-coarse:h-11",
                     on ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -290,7 +296,7 @@ function InsideTheRole() {
                 </button>
               );
             })}
-          </div>
+          </ChipRail>
         </LayoutGroup>
       </div>
 
@@ -307,20 +313,27 @@ function InsideTheRole() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 24 }}
                 transition={{ ...spring.soft, delay: reduce ? 0 : order * 0.05 }}
-                onPointerEnter={() => setHover(a.i)}
-                onPointerLeave={() => setHover(null)}
+                onPointerEnter={(e) => e.pointerType === "mouse" && setHover(a.i)}
+                onPointerLeave={(e) => e.pointerType === "mouse" && setHover(null)}
                 onFocus={() => setHover(a.i)}
                 onBlur={() => setHover(null)}
+                onClick={() => {
+                  // Tapping also focuses the card, which sets `hover` — clear
+                  // both on toggle-off or the highlight never releases on touch.
+                  setSelected((cur) => (cur === a.i ? null : a.i));
+                  setHover((cur) => (cur === a.i && selected === a.i ? null : cur));
+                }}
                 tabIndex={0}
                 className={cn(
-                  "glass-sm group relative flex gap-4 rounded-2xl p-4 pr-5 outline-none transition-[border-color,background-color] duration-300 sm:p-5",
-                  hover === a.i ? "border-accent/50 bg-accent/[0.05]" : "hover:border-accent/30",
+                  "glass-sm group relative flex cursor-pointer gap-4 rounded-2xl p-4 pr-5 outline-none transition-[border-color,background-color] duration-300 sm:p-5",
+                  active === a.i ? "border-accent/50 bg-accent/[0.05]" : "hover:border-accent/30",
+                  order >= 4 && !showAll && "hidden lg:flex",
                 )}
               >
                 <span
                   className={cn(
                     "relative z-10 grid size-7 shrink-0 place-items-center rounded-full border-2 bg-background font-mono text-[10px] font-semibold transition-colors duration-300",
-                    hover === a.i ? "border-accent bg-accent text-accent-foreground" : "border-accent/50 text-accent",
+                    active === a.i ? "border-accent bg-accent text-accent-foreground" : "border-accent/50 text-accent",
                   )}
                 >
                   {String(a.i + 1).padStart(2, "0")}
@@ -329,7 +342,7 @@ function InsideTheRole() {
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Link
                       href={`/projects/${a.product.id}`}
-                      className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-foreground/85 transition-colors hover:border-accent/60 hover:text-accent"
+                      className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-foreground/85 transition-colors hover:border-accent/60 hover:text-accent pointer-coarse:min-h-8 pointer-coarse:px-2.5 pointer-coarse:py-1 pointer-coarse:text-xs pointer-coarse:inline-flex pointer-coarse:items-center"
                     >
                       {a.product.label}
                     </Link>
@@ -342,15 +355,37 @@ function InsideTheRole() {
                   <p className="mt-2 text-pretty leading-relaxed text-foreground/85">
                     <Emphasis text={a.text} />
                   </p>
+                  {selected === a.i && (
+                    <ul aria-label="Tools behind this" className="mt-3 flex flex-wrap gap-1.5 lg:hidden">
+                      {[...toolsFor(a)].map((t) => (
+                        <li
+                          key={t}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-xs text-accent"
+                        >
+                          <TechLogo name={logoForTech(t)} fallback={monogramFor(t)} size={12} />
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </motion.li>
             ))}
           </AnimatePresence>
+          {!showAll && list.length > 4 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="glass-sm mt-1 inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-foreground/85 lg:hidden"
+            >
+              Show all {list.length} achievements
+            </button>
+          )}
         </motion.ol>
 
-        {/* Stack panel */}
-        <aside aria-label="Stack in this role" className="lg:block">
-          <div className="glass sticky top-[calc(var(--nav-height)+2rem)] rounded-3xl p-5 sm:p-6">
+        {/* Stack panel — desktop companion; phones get the inline chips above */}
+        <aside aria-label="Stack in this role" className="hidden lg:block">
+          <div className="glass lg:sticky lg:top-[calc(var(--header-offset)+2rem)] rounded-3xl p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Stack in this role</p>
               <span className="font-mono text-[10px] text-muted-foreground">{hover !== null ? `#${String(hover + 1).padStart(2, "0")}` : product === "all" ? "all" : "filtered"}</span>
@@ -411,6 +446,8 @@ function Company() {
   const facts = job.companyFacts;
   const reduce = useReducedMotion();
   const [active, setActive] = useState<string | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInView = useInView(mapRef, { margin: "-10% 0px" });
   if (!facts) return null;
 
   const hq = toMap(OFFICE_COORDS[facts.offices[0]]);
@@ -433,12 +470,12 @@ function Company() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         {/* Route map */}
-        <div className="glass relative overflow-hidden rounded-3xl p-5 sm:p-6">
+        <div className="@container glass relative overflow-hidden rounded-3xl p-5 sm:p-6">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Offices</p>
             <p className="font-mono text-[10px] text-muted-foreground">{offices.length} cities · schematic</p>
           </div>
-          <div className="@container relative mt-3 aspect-[2/1]">
+          <div ref={mapRef} className="@container relative mt-3 aspect-[2/1]">
             <div aria-hidden className="absolute inset-0 rounded-2xl bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_14%,transparent)_1px,transparent_1.5px)] [background-size:12px_12px] [mask-image:radial-gradient(ellipse_at_center,#000_45%,transparent_85%)]" />
             <svg viewBox="0 0 400 200" className="absolute inset-0 size-full overflow-visible" aria-hidden>
               {offices.slice(1).map((o, i) => {
@@ -459,7 +496,7 @@ function Company() {
                       viewport={{ once: true }}
                       transition={{ duration: 1.2, ease: [0.65, 0, 0.35, 1], delay: 0.3 + i * 0.15 }}
                     />
-                    {!reduce && (
+                    {!reduce && mapInView && (
                       <circle r={2.2} className="fill-accent [filter:drop-shadow(0_0_4px_var(--accent))]">
                         <animateMotion dur={`${2.6 + i * 0.3}s`} begin={`${1.8 + i * 0.4}s`} repeatCount="indefinite" path={d} />
                       </circle>
@@ -476,10 +513,10 @@ function Company() {
                   key={o.name}
                   type="button"
                   aria-label={isHq ? `${o.name}, headquarters` : o.name}
-                  onPointerEnter={() => setActive(o.name)}
-                  onPointerLeave={() => setActive(null)}
+                  onPointerEnter={(e) => e.pointerType === "mouse" && setActive(o.name)}
+                  onPointerLeave={(e) => e.pointerType === "mouse" && setActive(null)}
+                  onClick={() => setActive((cur) => (cur === o.name ? null : o.name))}
                   onFocus={() => setActive(o.name)}
-                  onBlur={() => setActive(null)}
                   initial={reduce ? false : { scale: 0, opacity: 0 }}
                   whileInView={{ scale: 1, opacity: 1 }}
                   viewport={{ once: true }}
@@ -488,7 +525,7 @@ function Company() {
                   style={{ left: `${(o.x / 400) * 100}%`, top: `${(o.y / 200) * 100}%` }}
                 >
                   <span className={cn("relative grid place-items-center rounded-full", isHq ? "size-4 bg-accent" : "size-3 border-2 border-accent bg-background")}>
-                    {isHq && <span className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60" />}
+                    {isHq && mapInView && <span className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60" />}
                   </span>
                   <span
                     className={cn(
@@ -506,6 +543,26 @@ function Company() {
               );
             })}
           </div>
+          {/* Small maps hide most labels — name the cities in a tappable list. */}
+          <ul className="mt-3 flex flex-wrap gap-1.5 @md:hidden" aria-label="Office cities">
+            {offices.map((o, i) => (
+              <li key={o.name}>
+                <button
+                  type="button"
+                  onClick={() => setActive((cur) => (cur === o.name ? null : o.name))}
+                  className={cn(
+                    "inline-flex min-h-8 items-center rounded-full border px-2.5 py-1 text-xs transition-colors",
+                    active === o.name || (i === 0 && active === null)
+                      ? "border-accent/60 bg-accent/10 text-accent"
+                      : "border-border/70 text-foreground/80",
+                  )}
+                >
+                  {o.name}
+                  {i === 0 && " · HQ"}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Facts */}

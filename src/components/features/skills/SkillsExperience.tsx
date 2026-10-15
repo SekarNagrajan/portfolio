@@ -5,11 +5,9 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type ReactNode,
   type RefObject,
 } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   AnimatePresence,
@@ -41,6 +39,8 @@ import {
   type SkillInfo,
 } from "@/lib/data/skill-evidence";
 import { spring } from "@/lib/motion";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { ChipRail } from "@/components/ui/ChipRail";
 import { cn } from "@/lib/utils";
 
 /** What each layer means, in plain English. */
@@ -59,14 +59,6 @@ const shade = (i: number) =>
   `color-mix(in oklab, var(--accent) ${SHADES[i]}%, transparent)`;
 
 const ALL = "all";
-const noop = () => () => {};
-/** True only in the browser — gates the portal without a hydration mismatch. */
-const useIsClient = () =>
-  useSyncExternalStore(
-    noop,
-    () => true,
-    () => false,
-  );
 const total = skills.length;
 const productName = (title: string) => title.split(" — ")[0];
 
@@ -113,7 +105,6 @@ export function SkillsExperience() {
   const [selected, setSelected] = useState<string>("React 19");
   const [sheetOpen, setSheetOpen] = useState(false);
   const explorerRef = useRef<HTMLElement>(null);
-  const isClient = useIsClient();
   const searchRef = useRef<HTMLInputElement>(null);
 
   const q = query.trim();
@@ -186,7 +177,7 @@ export function SkillsExperience() {
           </div>
           <p className="max-w-md text-pretty text-sm text-muted-foreground">
             Ranked by how many shipped products list them in their tech stack.
-            Click one to see where.
+            Pick one to see where.
           </p>
         </div>
         <DailyDrivers onPick={(n) => pick(n, true)} />
@@ -283,54 +274,21 @@ export function SkillsExperience() {
 
           {/* Inspector — sticky column on large screens */}
           <aside aria-label="Skill details" className="hidden lg:block">
-            <div className="sticky top-[calc(var(--nav-height)+6.5rem)]">
+            <div className="sticky top-[calc(var(--header-offset)+6.5rem)]">
               <Inspector name={selected} onPick={(n) => setSelected(n)} />
             </div>
           </aside>
         </div>
       </section>
 
-      {/* Inspector — bottom sheet on phones and tablets. Portalled to <body>:
-          the page-transition wrapper is transformed, which breaks position:fixed. */}
-      {isClient &&
-        createPortal(
-          <AnimatePresence>
-            {sheetOpen && (
-              <motion.div
-                key="sheet"
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={
-                  reduce
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 300, damping: 32 }
-                }
-                role="region"
-                aria-label="Skill details"
-                className="fixed inset-x-0 bottom-[calc(var(--tab-bar-height)+env(safe-area-inset-bottom))] z-40 max-h-[70vh] overflow-y-auto rounded-t-3xl border-t border-border bg-background/95 p-4 shadow-glass-lg backdrop-blur-xl lg:hidden"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="mx-auto h-1 w-10 rounded-full bg-border" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSheetOpen(false)}
-                  aria-label="Close skill details"
-                  className="absolute right-4 top-4 grid size-8 place-items-center rounded-full border border-border text-muted-foreground"
-                >
-                  <X size={14} />
-                </button>
-                <Inspector
-                  name={selected}
-                  onPick={(n) => setSelected(n)}
-                  compact
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body,
-        )}
+      {/* Inspector — bottom sheet on phones and tablets. */}
+      <BottomSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        label="Skill details"
+      >
+        <Inspector name={selected} onPick={(n) => setSelected(n)} compact />
+      </BottomSheet>
     </>
   );
 }
@@ -496,7 +454,7 @@ function Hero({
                     onFocus={() => setHover(g.id)}
                     onBlur={() => setHover(null)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-xl px-2.5 py-1.5 text-left text-sm transition-colors",
+                      "flex w-full items-center gap-3 rounded-xl px-2.5 py-1.5 text-left text-sm transition-colors pointer-coarse:min-h-11",
                       focus === g.id
                         ? "bg-accent/10 text-foreground"
                         : "text-foreground/80 hover:bg-foreground/[0.04]",
@@ -516,7 +474,7 @@ function Hero({
             </ul>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Click a layer to filter the explorer.
+            Tap a layer to filter the explorer.
           </p>
         </motion.div>
       </div>
@@ -617,8 +575,8 @@ function Toolbar({
   ];
 
   return (
-    <div className="glass sticky top-[calc(var(--nav-height)+0.75rem)] z-20 flex flex-col gap-2 rounded-2xl p-2 lg:flex-row lg:items-center">
-      <label className="relative flex min-w-0 items-center lg:w-72 lg:shrink-0">
+    <div className="flex flex-col gap-2 max-lg:contents lg:glass lg:sticky lg:top-[calc(var(--header-offset)+0.75rem)] lg:z-20 lg:flex-row lg:items-center lg:rounded-2xl lg:p-2">
+      <label className="relative flex min-w-0 items-center max-lg:mt-5 lg:w-72 lg:shrink-0">
         <span className="sr-only">Search skills</span>
         <Search
           size={16}
@@ -637,22 +595,19 @@ function Toolbar({
             type="button"
             onClick={() => setQuery("")}
             aria-label="Clear search"
-            className="absolute right-2 grid size-7 place-items-center rounded-lg text-muted-foreground hover:text-foreground"
+            className="absolute right-1 grid size-7 place-items-center rounded-lg text-muted-foreground hover:text-foreground pointer-coarse:size-10"
           >
             <X size={14} />
           </button>
         ) : (
-          <kbd className="pointer-events-none absolute right-3 rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+          <kbd className="pointer-events-none absolute right-3 hidden rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:block">
             /
           </kbd>
         )}
       </label>
 
-      <div
-        role="group"
-        aria-label="Filter by layer"
-        className="flex min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none]"
-      >
+      <div className="max-lg:glass max-lg:sticky max-lg:top-[calc(var(--header-offset)+0.5rem)] max-lg:z-20 max-lg:mt-2 max-lg:rounded-2xl max-lg:p-1.5 lg:contents">
+      <ChipRail label="Filter by layer" activeKey={layer} className="min-w-0 flex-1">
         {tabs.map((t) => {
           const on = t.id === layer;
           return (
@@ -660,9 +615,10 @@ function Toolbar({
               key={t.id}
               type="button"
               aria-pressed={on}
+              data-active={on || undefined}
               onClick={() => setLayer(t.id)}
               className={cn(
-                "relative isolate inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-medium transition-colors",
+                "relative isolate inline-flex h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 text-sm font-medium transition-colors",
                 on
                   ? "text-accent-foreground"
                   : "text-muted-foreground hover:text-foreground",
@@ -687,6 +643,7 @@ function Toolbar({
             </button>
           );
         })}
+      </ChipRail>
       </div>
 
       <p
@@ -741,7 +698,7 @@ function GroupCard({
         className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-accent/50 to-transparent opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
       />
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
+        <div className="flex flex-col items-start gap-3 min-[420px]:flex-row min-[420px]:gap-4">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-accent/30 bg-linear-to-br from-accent/20 via-accent/5 to-transparent text-accent">
             <Icon size={22} strokeWidth={1.75} trigger="self" />
           </span>
@@ -799,7 +756,7 @@ function GroupCard({
                       : "Listed on my resume"
                   }
                   className={cn(
-                    "relative inline-flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3.5 text-sm transition-[color,background-color,border-color,transform] duration-200 hover:-translate-y-0.5",
+                    "relative inline-flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3.5 text-sm transition-[color,background-color,border-color,transform] duration-200 pointer-coarse:min-h-11 [@media(hover:hover)]:hover:-translate-y-0.5",
                     on
                       ? "border-accent bg-accent text-accent-foreground shadow-[0_0_24px_-6px_var(--accent)]"
                       : "border-border/70 bg-muted/40 text-foreground/80 hover:border-accent/60 hover:text-foreground",
@@ -940,7 +897,7 @@ function Inspector({
                     <button
                       type="button"
                       onClick={() => onPick(p.name)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border/70 px-2.5 py-1 text-xs text-foreground/80 transition-colors hover:border-accent/50 hover:text-foreground"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border/70 px-2.5 py-1 text-xs text-foreground/80 transition-colors hover:border-accent/50 hover:text-foreground pointer-coarse:min-h-10 pointer-coarse:px-3"
                     >
                       <Logo name={p.name} size={11} />
                       {p.name}

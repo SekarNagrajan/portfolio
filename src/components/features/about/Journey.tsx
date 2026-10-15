@@ -18,6 +18,7 @@ import { education, certifications } from "@/lib/data/education";
 import { experiences } from "@/lib/data/experiences";
 import { projects } from "@/lib/data/projects";
 import { profile } from "@/lib/data/profile";
+import { useIsMobile } from "@/lib/hooks";
 import { spring } from "@/lib/motion";
 import { CountUp } from "@/components/motion/Effects";
 import { cn } from "@/lib/utils";
@@ -67,11 +68,15 @@ const TAG_STYLE: Record<Milestone["tag"], string> = {
 export function Journey() {
   const ref = useRef<HTMLOListElement>(null);
   const reduce = useReducedMotion();
+  const isMobile = useIsMobile();
+  // Phones start with the five formative milestones; the rest expand on demand.
+  const [showAll, setShowAll] = useState(false);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 75%", "end 55%"] });
   const fill = useSpring(scrollYProgress, { stiffness: 120, damping: 26 });
   const milestones = buildMilestones();
 
   return (
+    <>
     <ol ref={ref} className="relative flex flex-col gap-6 lg:gap-0">
       {/* Spine */}
       <div aria-hidden className="absolute bottom-2 left-5 top-2 w-px bg-border lg:left-1/2">
@@ -86,7 +91,11 @@ export function Journey() {
           <li
             key={m.title}
             id={`milestone-${i}`}
-            className={cn("relative grid scroll-mt-32 grid-cols-[2.5rem_1fr] gap-4 lg:grid-cols-2 lg:gap-16 lg:py-4", i > 0 && "lg:-mt-16")}
+            className={cn(
+              "relative grid scroll-mt-32 grid-cols-[2.5rem_1fr] gap-4 lg:grid-cols-2 lg:gap-16 lg:py-4",
+              i > 0 && "lg:-mt-16",
+              i >= 5 && !showAll && "max-lg:hidden",
+            )}
           >
             {/* Node */}
             <motion.span
@@ -103,8 +112,8 @@ export function Journey() {
             </motion.span>
 
             <motion.div
-              initial={reduce ? false : { opacity: 0, x: right ? 40 : -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={reduce ? false : isMobile ? { opacity: 0, y: 24 } : { opacity: 0, x: right ? 40 : -40 }}
+              whileInView={{ opacity: 1, x: 0, y: 0 }}
               viewport={{ once: true, margin: "0px 0px -20% 0px" }}
               transition={spring.soft}
               className={cn("lg:col-start-1 lg:text-right", right && "lg:col-start-2 lg:text-left")}
@@ -115,6 +124,16 @@ export function Journey() {
         );
       })}
     </ol>
+    {!showAll && (
+      <button
+        type="button"
+        onClick={() => setShowAll(true)}
+        className="glass-sm mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-4 text-sm font-semibold text-foreground/85 lg:hidden"
+      >
+        Show all {milestones.length} milestones
+      </button>
+    )}
+    </>
   );
 }
 

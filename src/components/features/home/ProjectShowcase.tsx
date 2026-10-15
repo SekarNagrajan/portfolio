@@ -55,7 +55,7 @@ export function ProjectShowcase() {
 
       {/* Sticky preview */}
       <div className="hidden lg:block">
-        <div className="sticky top-[calc(var(--nav-height)+3rem)]">
+        <div className="sticky top-[calc(var(--header-offset)+3rem)]">
           <DeviceFrame
             label={featuredProjects[active].title.split(" — ")[0]}
             index={active}
@@ -100,6 +100,9 @@ function Chapter({
   const reduce = useReducedMotion();
   const cs = getCaseStudy(project.id)?.study;
   const name = project.title.split(" — ")[0];
+  // Phones: the challenge/impact detail starts collapsed to keep each
+  // chapter around one screen; desktop always shows everything.
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (centred) onActive();
@@ -158,6 +161,16 @@ function Chapter({
 
         {cs && (
           <>
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => !e)}
+              aria-expanded={expanded}
+              className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-foreground/85 lg:hidden"
+            >
+              {expanded ? "Hide the full story" : "Read the full story"}
+              <span className={cn("transition-transform duration-300", expanded && "rotate-90")}>→</span>
+            </button>
+            <div className={cn("lg:contents", expanded ? "contents" : "hidden")}>
             <div className="mt-7 grid gap-5 sm:grid-cols-2">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">The challenge</p>
@@ -189,6 +202,7 @@ function Chapter({
               <UserRound size={13} className="text-accent" />
               <span className="text-muted-foreground">My role:</span> {cs.role}
             </p>
+            </div>
 
             <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
               {cs.stats.map((s) => (

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useRef, useState, type CSSProperties } from "react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { TechLogo } from "@/components/icons/TechLogos";
 import { stack, stackCount, type StackItem } from "@/lib/data/stack";
 import { spring } from "@/lib/motion";
@@ -25,13 +25,23 @@ export function StackShowcase() {
   const [active, setActive] = useState(stack[0].id);
   const layer = stack.find((c) => c.id === active) ?? stack[0];
 
+  const railsRef = useRef<HTMLDivElement>(null);
+  const railsInView = useInView(railsRef, { margin: "10% 0px" });
   const all = stack.flatMap((c) => c.items);
   const half = Math.ceil(all.length / 2);
 
   return (
     <div className="flex flex-col gap-10">
-      {/* Logo rails */}
-      <div aria-hidden className="flex flex-col gap-3 [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]">
+      {/* Logo rails — paused while off-screen (endless blurred pills are
+          the costliest thing on this page for phone GPUs). */}
+      <div
+        ref={railsRef}
+        aria-hidden
+        className={cn(
+          "flex flex-col gap-3 [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)]",
+          !railsInView && "[&_.animate-marquee]:[animation-play-state:paused]",
+        )}
+      >
         <Rail items={all.slice(0, half)} duration={46} />
         <Rail items={all.slice(half)} duration={52} reverse />
       </div>
@@ -55,7 +65,11 @@ export function StackShowcase() {
                 id={`layer-tab-${c.id}`}
                 aria-selected={selected}
                 aria-controls="layer-panel"
-                onClick={() => setActive(c.id)}
+                onClick={() => {
+                  setActive(c.id);
+                  if (window.innerWidth < 1024)
+                    document.getElementById("layer-panel")?.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+                }}
                 initial={reduce ? false : { opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "0px 0px -10% 0px" }}
@@ -98,7 +112,7 @@ export function StackShowcase() {
           id="layer-panel"
           role="tabpanel"
           aria-labelledby={`layer-tab-${active}`}
-          className="glass mt-3 overflow-hidden rounded-2xl sm:min-h-[16.5rem] lg:min-h-[13.75rem]"
+          className="glass mt-3 min-h-[24rem] overflow-hidden rounded-2xl sm:min-h-[16.5rem] lg:min-h-[13.75rem]"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div

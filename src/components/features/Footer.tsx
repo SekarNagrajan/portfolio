@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { profile } from "@/lib/data/profile";
 import { experiences } from "@/lib/data/experiences";
@@ -12,10 +11,8 @@ import {
   LinkedinIcon,
   MailIcon,
   MotionLink,
-  SparklesIcon,
 } from "@/components/icons/AnimatedIcons";
 import { hoverTrigger } from "@/lib/motion";
-import { cn } from "@/lib/utils";
 
 /**
  * Build-pinned copyright year.
@@ -43,18 +40,6 @@ const SOCIALS = [
   { href: profile.socials.email, label: "Email", icon: MailIcon, external: false },
 ] as const;
 
-/** Words for the scrolling band along the top edge. */
-const BAND = [
-  "Full-stack engineering",
-  "Multi-tenant SaaS",
-  "React 19",
-  "Spring Boot 4",
-  "Java 21",
-  "AI workflows",
-  "Design systems",
-  "Maritime platforms",
-] as const;
-
 export function Footer() {
   const job = experiences[0];
   const glance = [
@@ -70,32 +55,6 @@ export function Footer() {
       <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
       <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[60vh] w-[80vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--accent)_14%,transparent),transparent)]" />
 
-      {/* Scrolling band */}
-      <div
-        aria-hidden
-        className="group flex overflow-hidden border-b border-border/60 py-5 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]"
-      >
-        {/* <div
-          className="animate-marquee flex w-max shrink-0 items-center gap-8 pr-8 group-hover:[animation-play-state:paused]"
-          style={{ "--marquee-duration": "45s" } as CSSProperties}
-        >
-          {[...BAND, ...BAND].map((w, i) => (
-            <span key={i} className="flex shrink-0 items-center gap-8">
-              <span
-                className={cn(
-                  "text-3xl font-semibold tracking-tight sm:text-5xl",
-                  i % 2
-                    ? "text-transparent [-webkit-text-stroke:1px_color-mix(in_oklab,var(--foreground)_35%,transparent)]"
-                    : "text-foreground/85",
-                )}
-              >
-                {w}
-              </span>
-              <SparklesIcon size={22} className="text-accent" />
-            </span>
-          ))}
-        </div> */}
-      </div>
 
       <div className="shell py-16 sm:py-20">
         <FooterCta />
@@ -103,11 +62,11 @@ export function Footer() {
         <Reveal className="mt-14 grid first:mt-0 gap-12 sm:grid-cols-2 lg:grid-cols-[1fr_1.1fr_1.3fr] lg:gap-16">
           {/* Navigate */}
           <nav aria-label="Footer">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Navigate</h3>
-            <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3.5 text-sm">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Navigate</h3>
+            <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
               {SITEMAP.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="group inline-flex items-center gap-2 text-foreground/80 transition-colors hover:text-foreground">
+                  <Link href={l.href} className="group inline-flex min-h-11 items-center gap-2 text-foreground/80 transition-colors hover:text-foreground">
                     <span className="h-px w-3 bg-border transition-all duration-300 group-hover:w-6 group-hover:bg-accent" />
                     {l.label}
                   </Link>
@@ -118,7 +77,7 @@ export function Footer() {
 
           {/* Connect */}
           <div>
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Connect</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Connect</h3>
             <ul className="mt-5 flex flex-col gap-2">
               {SOCIALS.map(({ href, label, icon: Icon, external }) => (
                 <li key={label}>
@@ -148,7 +107,7 @@ export function Footer() {
 
           {/* At a glance — the recruiter summary */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">At a glance</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">At a glance</h3>
             <dl className="mt-5 divide-y divide-border/60 rounded-2xl border border-border/60 bg-card/40">
               {glance.map((g) => (
                 <div key={g.label} className="flex items-baseline justify-between gap-4 px-4 py-3">

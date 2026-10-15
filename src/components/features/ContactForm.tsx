@@ -120,6 +120,16 @@ export function ContactForm() {
       notifiedRef.current = state;
       toast.error(state.message);
     }
+    // On phones the errors render above the submit button, off-screen —
+    // move the visitor straight to the first invalid field.
+    if (state.success === false && state.errors) {
+      const el = document.querySelector<HTMLElement>('#contact [aria-invalid="true"]');
+      if (el) {
+        el.focus({ preventScroll: true });
+        // After the error layout settles — a smooth scroll would be cut short.
+        requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: "instant" }));
+      }
+    }
   }, [state]);
 
   const errorFor = (f: Field): string | null => {
@@ -238,6 +248,9 @@ export function ContactForm() {
                   minLength={LIMITS.name[0]}
                   maxLength={LIMITS.name[1]}
                   autoComplete="name"
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  enterKeyHint="next"
                   value={values.name}
                   onChange={(e) => set("name", e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, name: true }))}
@@ -261,6 +274,10 @@ export function ContactForm() {
                   type="email"
                   required
                   autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
                   value={values.email}
                   onChange={(e) => set("email", e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, email: true }))}
@@ -295,7 +312,7 @@ export function ContactForm() {
                 aria-invalid={errorFor("message") ? true : undefined}
                 aria-describedby={errorFor("message") ? "message-error" : "message-meter"}
                 placeholder=" "
-                className={cn(fieldClass, "min-h-44 resize-y pb-8 pt-7")}
+                className={cn(fieldClass, "min-h-44 resize-y pb-8 pr-10 pt-7")}
               />
             </FloatField>
 

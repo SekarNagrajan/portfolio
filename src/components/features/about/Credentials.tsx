@@ -84,7 +84,7 @@ export function Credentials() {
       {certifications.map((c, i) => (
         <SpotlightCard key={c.id} index={i + 1} lift={false} className="relative overflow-hidden p-7 sm:p-9">
           {/* Seal */}
-          <div aria-hidden className="absolute right-6 top-6 size-24 opacity-90 sm:size-28">
+          <div aria-hidden className="absolute right-4 top-4 size-16 opacity-90 sm:right-6 sm:top-6 sm:size-28">
             <motion.svg
               viewBox="0 0 100 100"
               className="size-full text-accent/25"
@@ -108,7 +108,7 @@ export function Credentials() {
           <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
             <AwardIcon size={15} /> Certification
           </span>
-          <h3 className="mt-2 max-w-[80%] text-balance text-xl font-semibold tracking-tight sm:text-2xl">{c.title}</h3>
+          <h3 className="mt-2 max-w-[calc(100%-4.5rem)] text-balance text-xl font-semibold tracking-tight sm:max-w-[80%] sm:text-2xl">{c.title}</h3>
           <p className="mt-1.5 text-sm text-muted-foreground">{c.issuer}</p>
           <p className="mt-6 inline-flex rounded-full border border-border/70 px-3 py-1 font-mono text-xs text-muted-foreground">{c.period}</p>
         </SpotlightCard>

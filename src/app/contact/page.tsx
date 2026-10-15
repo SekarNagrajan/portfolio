@@ -1,5 +1,5 @@
 import { ContactForm } from "@/components/features/ContactForm";
-import { Channels, ContactHero, NextSteps } from "@/components/features/contact/ContactParts";
+import { Channels, ContactHero, NextSteps, QuickChannels } from "@/components/features/contact/ContactParts";
 import { breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 
@@ -17,6 +17,10 @@ export default function ContactPage() {
       <ContactHero />
 
       <section id="contact" className="shell relative scroll-mt-24 pb-8 pt-12 sm:pt-16">
+        {/* Phones: one-tap channels before the long form. */}
+        <div className="mb-6 lg:hidden">
+          <QuickChannels />
+        </div>
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] xl:gap-8">
           <div className="glass relative overflow-hidden rounded-3xl p-6 sm:p-9">
             <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-accent/60 to-transparent" />
@@ -27,7 +31,7 @@ export default function ContactPage() {
             <ContactForm />
           </div>
 
-          <aside className="flex flex-col gap-6 lg:sticky lg:top-[calc(var(--nav-height)+1.5rem)]">
+          <aside className="flex flex-col gap-6 lg:sticky lg:top-[calc(var(--header-offset)+1.5rem)]">
             <Channels />
             <NextSteps />
           </aside>

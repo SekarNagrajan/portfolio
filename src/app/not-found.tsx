@@ -23,7 +23,7 @@ export default function NotFound() {
         aside={
           <p
             aria-hidden
-            className="select-none text-[clamp(6rem,16vw,14rem)] font-black leading-none tracking-tighter text-transparent [-webkit-text-stroke:1px_color-mix(in_oklab,var(--accent)_45%,transparent)]"
+            className="hidden select-none text-[clamp(6rem,16vw,14rem)] font-black leading-none tracking-tighter text-transparent [-webkit-text-stroke:1px_color-mix(in_oklab,var(--accent)_45%,transparent)] sm:block"
           >
             404
           </p>

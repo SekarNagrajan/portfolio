@@ -40,6 +40,8 @@ export function Wordmark({ text }: { text: string }) {
   useEffect(() => {
     const el = ref.current;
     if (!el || !inView || reduce) return;
+    // Phones: the sweep repaints a viewport-wide text mask every frame.
+    if (window.matchMedia("(hover: none)").matches) return;
     let ctrl: AnimationPlaybackControls | undefined;
     const start = () => {
       if (hovering.current) return;

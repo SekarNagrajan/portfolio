@@ -107,7 +107,7 @@ export function NowBand() {
           onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHold(false)}
         >
           <div className="flex items-center justify-between gap-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">What I&apos;ve shipped here</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">What I&apos;ve shipped here</p>
             <span className="flex items-center gap-2">
               <span className="font-mono text-xs tabular-nums text-muted-foreground">
                 {String(i + 1).padStart(2, "0")}
@@ -117,20 +117,26 @@ export function NowBand() {
                 type="button"
                 onClick={() => setUserPaused(!paused)}
                 aria-label={paused ? "Play highlights" : "Pause highlights"}
-                className="grid size-7 place-items-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:text-foreground"
+                className="grid size-7 place-items-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:text-foreground pointer-coarse:size-11"
               >
                 {paused ? <Play size={11} /> : <Pause size={11} />}
               </button>
             </span>
           </div>
 
-          <div className="relative mt-6 flex min-h-[10rem] flex-1 items-center">
+          <div className="relative mt-6 grid min-h-[10rem] flex-1 items-center">
             <span
               aria-hidden
               className="pointer-events-none absolute -top-4 right-0 select-none font-mono text-[7rem] font-bold leading-none text-foreground/[0.04] sm:text-[9rem]"
             >
               {String(i + 1).padStart(2, "0")}
             </span>
+            {/* Invisible copies reserve the tallest slide's height. */}
+            {job.achievements.map((a) => (
+              <p aria-hidden key={a} className="invisible col-start-1 row-start-1 text-pretty text-lg font-medium leading-relaxed sm:text-xl xl:text-2xl xl:leading-snug">
+                {a}
+              </p>
+            ))}
             <AnimatePresence mode="wait" initial={false}>
               <motion.p
                 key={i}
@@ -138,7 +144,7 @@ export function NowBand() {
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={reduce ? undefined : { opacity: 0, y: -12, filter: "blur(4px)" }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="relative text-pretty text-lg font-medium leading-relaxed text-foreground sm:text-xl xl:text-2xl xl:leading-snug"
+                className="relative col-start-1 row-start-1 text-foreground text-pretty text-lg font-medium leading-relaxed sm:text-xl xl:text-2xl xl:leading-snug"
               >
                 {job.achievements[i]}
               </motion.p>
@@ -154,7 +160,7 @@ export function NowBand() {
                 aria-label={`Highlight ${n + 1}`}
                 aria-current={n === i ? "true" : undefined}
                 onClick={() => setI(n)}
-                className="group relative h-6 flex-1"
+                className="group relative h-6 flex-1 pointer-coarse:h-11"
               >
                 <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-foreground/10 transition-colors group-hover:bg-foreground/20">
                   {n < i && <span className="absolute inset-0 bg-accent/60" />}
@@ -198,7 +204,7 @@ function Fact({
 }) {
   return (
     <div className={className}>
-      <dt className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         <span className="text-accent">{icon}</span>
         {label}
       </dt>

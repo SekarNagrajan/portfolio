@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { type ReactNode } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { usePhase } from "@/lib/hooks";
 import {
   Anchor,
   Check,
@@ -22,22 +23,6 @@ import { Building2, FileSpreadsheet } from "lucide-react";
  * showcase. They depict what each product does — they are not
  * screenshots and show no real customer data.
  */
-
-/** Cycles 0…steps-1 while the element is on screen (frozen on the last step for reduced motion). */
-function usePhase(steps: number, ms: number) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { margin: "-10% 0px" });
-  const reduce = useReducedMotion();
-  const [phase, setPhase] = useState(0);
-
-  useEffect(() => {
-    if (reduce || !inView) return;
-    const id = window.setInterval(() => setPhase((p) => (p + 1) % steps), ms);
-    return () => clearInterval(id);
-  }, [inView, reduce, steps, ms]);
-
-  return { ref, phase: reduce ? steps - 1 : phase };
-}
 
 export function ProjectPreview({ id }: { id: string }) {
   if (id === "crm") return <CrmPreview />;

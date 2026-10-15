@@ -42,7 +42,10 @@
   --ring: #4096ff;
 
   --radius: 0.875rem;
-  --nav-height: 4.5rem;
+  /* Mobile top bar is h-14; 4.5rem from the lg breakpoint up — see below. */
+  --nav-height: 3.5rem;
+  /* Nav height plus the notch — the offset sticky elements sit below. */
+  --header-offset: calc(var(--nav-height) + env(safe-area-inset-top));
   /* Bottom tab bar. Zero from the lg breakpoint up — see the media query below. */
   --tab-bar-height: 3.5rem;
 
@@ -159,7 +162,15 @@
   margin-inline: auto;
   width: 100%;
   max-width: 1800px;
-  padding-inline: clamp(1.25rem, 4vw, 4rem);
+  /* Gutters never sink under a landscape notch (viewport-fit: cover). */
+  padding-left: max(clamp(1.25rem, 4vw, 4rem), env(safe-area-inset-left));
+  padding-right: max(clamp(1.25rem, 4vw, 4rem), env(safe-area-inset-right));
+}
+
+/* Horizontal scroller hint — fade both edges so overflow is discoverable. */
+@utility edge-fade-x {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 
 @utility text-gradient {
@@ -235,6 +246,7 @@
 
 @media (min-width: 64rem) {
   :root {
+    --nav-height: 4.5rem;
     --tab-bar-height: 0px;
   }
 }

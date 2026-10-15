@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion, useDragControls, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Check, Maximize2, UserRound, X } from "lucide-react";
 import { CountUp } from "@/components/motion/Effects";
 import { ProjectPreview } from "@/components/features/home/ProjectPreviews";
@@ -12,6 +12,8 @@ import { LayersIcon } from "@/components/icons/AnimatedIcons";
 import { projects, type Project } from "@/lib/data/projects";
 import { getCaseStudy } from "@/lib/data/case-studies";
 import { spring } from "@/lib/motion";
+import { ChipRail } from "@/components/ui/ChipRail";
+import { useFocusTrap, useIsMobile, useScrollLock } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -118,7 +120,7 @@ export function ProjectsExperience() {
               Filter by what you care about, then open a quick view for the challenge, what I did, and the impact.
             </p>
           </div>
-          <div role="group" aria-label="Filter projects" className="glass flex max-w-full gap-1 overflow-x-auto rounded-full p-1.5 [scrollbar-width:none]">
+          <ChipRail label="Filter projects" activeKey={facet} className="glass max-w-full rounded-full p-1.5">
             {FACETS.map((f) => {
               const on = f.id === facet;
               const n = projects.filter(f.test).length;
@@ -127,9 +129,10 @@ export function ProjectsExperience() {
                   key={f.id}
                   type="button"
                   aria-pressed={on}
+                  data-active={on || undefined}
                   onClick={() => setFacet(f.id)}
                   className={cn(
-                    "relative isolate inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors",
+                    "relative isolate inline-flex h-10 shrink-0 snap-start items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors pointer-coarse:h-11",
                     on ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -145,7 +148,7 @@ export function ProjectsExperience() {
                 </button>
               );
             })}
-          </div>
+          </ChipRail>
         </div>
 
         <motion.ul layout className="grid gap-6 lg:grid-cols-2 lg:gap-8">
@@ -201,13 +204,16 @@ function Hero({ onPick }: { onPick: (id: string) => void }) {
           className="glass rounded-3xl p-5 sm:p-6"
         >
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Timeline</p>
-            <p className="font-mono text-[10px] text-muted-foreground">click a bar to jump</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Timeline</p>
+            <p className="font-mono text-[11px] text-muted-foreground sm:text-[10px]">
+              <span className="pointer-coarse:hidden">click a bar to jump</span>
+              <span className="hidden pointer-coarse:inline">tap a bar · tap again to jump</span>
+            </p>
           </div>
 
           <div className="relative mt-5">
             {/* Year grid */}
-            <div aria-hidden className="absolute inset-y-0 left-[7.5rem] right-0">
+            <div aria-hidden className="absolute inset-y-0 left-[5.25rem] right-0 sm:left-[7.5rem]">
               {ticks.map((t, k) => (
                 <span key={t} className="absolute inset-y-0 border-l border-dashed border-border/60" style={{ left: `${(k / SPAN) * 100}%` }} />
               ))}
@@ -220,16 +226,25 @@ function Hero({ onPick }: { onPick: (id: string) => void }) {
                 const on = hover === p.id;
                 return (
                   <li key={p.id} className="flex items-center gap-3">
-                    <span className={cn("w-[6.75rem] shrink-0 text-right text-xs font-medium leading-tight transition-colors", on ? "text-foreground" : "text-muted-foreground")}>
+                    <span className={cn("w-[4.5rem] shrink-0 text-right text-xs font-medium leading-tight transition-colors sm:w-[6.75rem]", on ? "text-foreground" : "text-muted-foreground")}>
                       {shortName(p)}
                     </span>
-                    <div className="relative h-8 flex-1">
+                    <div className="relative h-8 flex-1 pointer-coarse:h-10">
                       <motion.button
                         type="button"
                         aria-label={`${shortName(p)}, ${p.period}. Jump to project`}
-                        onClick={() => onPick(p.id)}
-                        onPointerEnter={() => setHover(p.id)}
-                        onPointerLeave={() => setHover(null)}
+                        onClick={(e) => {
+                          // Touch gets a two-step flow: first tap shows the
+                          // readout (hover never fires), second tap jumps.
+                          const coarse = e.nativeEvent instanceof PointerEvent && (e.nativeEvent as PointerEvent).pointerType !== "mouse";
+                          if (coarse && hover !== p.id) {
+                            setHover(p.id);
+                            return;
+                          }
+                          onPick(p.id);
+                        }}
+                        onPointerEnter={(e) => e.pointerType === "mouse" && setHover(p.id)}
+                        onPointerLeave={(e) => e.pointerType === "mouse" && setHover(null)}
                         onFocus={() => setHover(p.id)}
                         onBlur={() => setHover(null)}
                         initial={reduce ? false : { scaleX: 0 }}
@@ -237,7 +252,7 @@ function Hero({ onPick }: { onPick: (id: string) => void }) {
                         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.4 + i * 0.12 }}
                         style={{ left: `${from * 100}%`, width: `${(to - from) * 100}%`, originX: 0 }}
                         className={cn(
-                          "absolute inset-y-0 flex items-center justify-end overflow-hidden rounded-lg px-2 font-mono text-[10px] transition-[box-shadow,filter] duration-300",
+                          "absolute inset-y-0 flex items-center justify-end overflow-hidden rounded-lg px-2 font-mono text-[11px] transition-[box-shadow,filter] duration-300 sm:text-[10px]",
                           on ? "shadow-[0_0_24px_-4px_var(--accent)] brightness-110" : "",
                         )}
                       >
@@ -263,11 +278,11 @@ function Hero({ onPick }: { onPick: (id: string) => void }) {
             </ul>
 
             {/* Axis */}
-            <div className="relative ml-[7.5rem] mt-3 h-4">
+            <div className="relative ml-[5.25rem] mt-3 h-4 sm:ml-[7.5rem]">
               {ticks.map((t, k) => (
                 <span
                   key={t}
-                  className={cn("absolute -translate-x-1/2 font-mono text-[10px]", t === "Now" ? "translate-x-[-100%] text-accent" : "text-muted-foreground")}
+                  className={cn("absolute -translate-x-1/2 font-mono text-[11px] sm:text-[10px]", t === "Now" ? "translate-x-[-100%] text-accent" : "text-muted-foreground")}
                   style={{ left: `${(k / SPAN) * 100}%` }}
                 >
                   {t}
@@ -323,11 +338,16 @@ function ProjectTile({
       transition={{ ...spring.soft, delay: reduce ? 0 : order * 0.06 }}
       className="scroll-mt-28"
     >
-      <article className="glass group relative flex h-full flex-col overflow-hidden rounded-3xl transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--accent)_45%,transparent)]">
+      <article className="glass group relative flex h-full flex-col overflow-hidden rounded-3xl transition-[border-color,transform,box-shadow] duration-300 [@media(hover:hover)]:hover:-translate-y-1 [@media(hover:hover)]:hover:border-accent/40 hover:shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--accent)_45%,transparent)]">
         {/* Preview */}
         <motion.div
           layoutId={`preview-${p.id}`}
-          className={cn("relative border-b border-border/60 bg-background/30", hidden && "opacity-0")}
+          onClick={() => {
+            // Convenience tap target on touch; the "Quick view" button below
+            // stays the accessible control.
+            if (window.innerWidth < 1024) onOpen();
+          }}
+          className={cn("relative border-b border-border/60 bg-background/30 max-lg:cursor-pointer", hidden && "opacity-0")}
         >
           <div aria-hidden className="aspect-[4/3] sm:aspect-[16/10]">
             {/* Scaled up on large cards so the vignette fills the frame. */}
@@ -338,7 +358,7 @@ function ProjectTile({
           <button
             type="button"
             onClick={onOpen}
-            className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground/90 opacity-100 backdrop-blur transition-[opacity,border-color] duration-300 hover:border-accent/60 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+            className="absolute right-4 top-4 hidden items-center gap-1.5 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground/90 backdrop-blur transition-[opacity,border-color] duration-300 hover:border-accent/60 lg:inline-flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
           >
             <Maximize2 size={12} /> Quick view
           </button>
@@ -385,7 +405,7 @@ function ProjectTile({
           )}
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-7">
-            <ul className="flex items-center" aria-label="Key technologies">
+            <ul className="hidden items-center lg:flex" aria-label="Key technologies">
               {p.techStack.slice(0, 5).map((t, k) => (
                 <li
                   key={t}
@@ -399,6 +419,20 @@ function ProjectTile({
               ))}
               {p.techStack.length > 5 && (
                 <li className="ml-2 font-mono text-[11px] text-muted-foreground">+{p.techStack.length - 5}</li>
+              )}
+            </ul>
+            {/* Touch has no tooltips — name the tools instead. */}
+            <ul className="flex flex-wrap items-center gap-1.5 lg:hidden" aria-label="Key technologies">
+              {p.techStack.slice(0, 3).map((t) => (
+                <li
+                  key={t}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1 text-xs text-foreground/80"
+                >
+                  <Logo name={t} size={12} /> {t}
+                </li>
+              ))}
+              {p.techStack.length > 3 && (
+                <li className="font-mono text-[11px] text-muted-foreground">+{p.techStack.length - 3}</li>
               )}
             </ul>
             <div className="flex items-center gap-2">
@@ -443,7 +477,10 @@ function QuickView({
 }) {
   const isClient = useIsClient();
   const reduce = useReducedMotion();
+  const isMobile = useIsMobile();
+  const dragControls = useDragControls();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
   const p = projects.find((x) => x.id === id) ?? null;
   const cs = p ? getCaseStudy(p.id)?.study : null;
@@ -456,19 +493,17 @@ function QuickView({
     if (!p) return;
     returnTo.current ??= document.activeElement as HTMLElement | null;
     closeRef.current?.focus({ preventScroll: true });
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowRight" && next) onMove(next.id);
       else if (e.key === "ArrowLeft" && prev) onMove(prev.id);
     };
     window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = overflow;
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [p, prev, next, onClose, onMove]);
+
+  useScrollLock(p !== null);
+  useFocusTrap(panelRef, p !== null);
 
   useEffect(() => {
     if (p) return;
@@ -488,9 +523,10 @@ function QuickView({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <button type="button" aria-label="Close quick view" tabIndex={-1} onClick={onClose} className="absolute inset-0 bg-background/70 backdrop-blur-md" />
+          <button type="button" aria-label="Close quick view" tabIndex={-1} onClick={onClose} className="absolute inset-0 bg-background/80 sm:bg-background/70 sm:backdrop-blur-md" />
 
           <motion.div
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="quick-view-title"
@@ -498,8 +534,24 @@ function QuickView({
             animate={{ y: 0, opacity: 1 }}
             exit={reduce ? undefined : { y: 30, opacity: 0 }}
             transition={spring.soft}
+            drag={isMobile && !reduce ? "y" : false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            dragListener={false}
+            dragControls={dragControls}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 80 || info.velocity.y > 500) onClose();
+            }}
             className="relative flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-glass-lg sm:rounded-3xl"
           >
+            {/* Grab handle — phones drag down to dismiss */}
+            <div
+              className="flex h-6 shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing sm:hidden"
+              onPointerDown={(e) => dragControls.start(e)}
+              aria-hidden
+            >
+              <span className="h-1 w-10 rounded-full bg-border" />
+            </div>
             {/* Header bar */}
             <div className="flex items-center gap-3 border-b border-border/60 px-5 py-3">
               <span className="font-mono text-xs text-muted-foreground">
@@ -525,7 +577,7 @@ function QuickView({
               </div>
             </div>
 
-            <div className="overflow-y-auto">
+            <div className="overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={p.id}
@@ -535,8 +587,17 @@ function QuickView({
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"
                 >
-                  {/* Left: preview + facts */}
-                  <div className="border-b border-border/60 p-5 sm:p-7 lg:border-b-0 lg:border-r">
+                  {/* Phones read top-down: title → story → preview/stack. */}
+                  <div className="p-5 pb-0 sm:p-7 sm:pb-0 lg:hidden">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">{p.domain}</p>
+                    <h2 id="quick-view-title" className="mt-2 text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+                      {p.title}
+                    </h2>
+                    <p className="mt-1 font-mono text-xs text-muted-foreground">{p.period}</p>
+                  </div>
+
+                  {/* Preview + facts — after the story on phones, left column on lg */}
+                  <div className="order-2 border-t border-border/60 p-5 sm:p-7 lg:order-none lg:border-r lg:border-t-0">
                     <motion.div layoutId={`preview-${p.id}`} className="overflow-hidden rounded-2xl border border-border/60 bg-background/30">
                       <div aria-hidden className="aspect-[4/3]">
                         <ProjectPreview id={p.id} />
@@ -544,11 +605,11 @@ function QuickView({
                     </motion.div>
                     <p className="mt-2 text-center text-[11px] text-muted-foreground/70">Illustrative preview. Not real customer data.</p>
 
-                    <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">{p.domain}</p>
-                    <h2 id="quick-view-title" className="mt-2 text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
-                      {p.title}
-                    </h2>
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">{p.period}</p>
+                    <div className="hidden lg:block">
+                      <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">{p.domain}</p>
+                      <h2 className="mt-2 text-balance text-2xl font-semibold tracking-tight sm:text-3xl">{p.title}</h2>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">{p.period}</p>
+                    </div>
                     {cs && (
                       <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-1.5 text-xs">
                         <UserRound size={13} className="text-accent" /> {cs.role}
@@ -614,7 +675,7 @@ function QuickView({
                                 initial={reduce ? false : { opacity: 0, x: 12 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ ...spring.soft, delay: 0.15 + i * 0.07 }}
-                                className="grid grid-cols-[6.5rem_1fr] items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-3 py-2"
+                                className="grid gap-1 rounded-xl border border-border/60 bg-background/40 px-3 py-2 sm:grid-cols-[6.5rem_1fr] sm:items-center sm:gap-3"
                               >
                                 <span className="text-[11px] font-semibold uppercase tracking-wider text-accent">{layer.label}</span>
                                 <span className="text-xs text-foreground/80">{layer.items.join(" · ")}</span>

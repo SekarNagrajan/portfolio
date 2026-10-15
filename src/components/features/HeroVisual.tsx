@@ -85,6 +85,7 @@ const NODES: readonly StackNode[] = [
     icon: <TechLogo name="springboot" size={22} />,
     hub: {
       width: 40,
+      short: "Spring",
       chips: [
         <Chip key="j" logo="openjdk">Java 21</Chip>,
         <Chip key="s" logo="springsecurity">Security</Chip>,
@@ -252,7 +253,9 @@ export function HeroVisual() {
 
   // Reduced-motion visitors start paused; they can still press play.
   const paused = userPaused ?? Boolean(reduce);
-  const running = !paused && inView && !engaged;
+  const [hasInspected, setHasInspected] = useState(false);
+  // A tapped node holds the tour so the readout isn't overwritten mid-read.
+  const running = !paused && inView && !engaged && inspect === null;
   const flow = FLOWS[flowIdx];
 
   // Trace loop: walk the packet hop by hop, then move to the next flow.
@@ -357,11 +360,13 @@ export function HeroVisual() {
         my.set(e.clientY - r.top);
       }}
       onPointerEnter={(e) => e.pointerType === "mouse" && setEngaged(true)}
-      onPointerLeave={() => {
-        setEngaged(false);
-        setInspect(null);
+      onPointerLeave={(e) => {
         mx.set(-400);
         my.set(-400);
+        // Touch fires pointerleave on finger lift — keep the tapped node inspected.
+        if (e.pointerType !== "mouse") return;
+        setEngaged(false);
+        setInspect(null);
       }}
       onFocus={() => setEngaged(true)}
       onBlur={(e) => {
@@ -380,7 +385,7 @@ export function HeroVisual() {
             <span key={i} className="size-2.5 rounded-full bg-muted-foreground/25" />
           ))}
         </span>
-        <span className="truncate font-mono text-[11px] text-muted-foreground">
+        <span className="truncate font-mono text-xs text-muted-foreground @md:text-[11px]">
           sekar<span className="text-muted-foreground/50">/</span>
           <span className="text-foreground/90">impact-map</span>
         </span>
@@ -394,7 +399,7 @@ export function HeroVisual() {
                 aria-label={`Show: ${f.headline} (${f.product})`}
                 onClick={() => pickFlow(i)}
                 className={cn(
-                  "relative rounded-md px-1.5 py-1 font-mono text-[10px] tabular-nums transition-colors",
+                  "relative rounded-md px-1.5 py-1 font-mono text-[11px] tabular-nums transition-colors pointer-coarse:min-h-11 pointer-coarse:min-w-9 @md:text-[10px]",
                   i === flowIdx ? "text-foreground" : "text-muted-foreground/70 hover:text-foreground",
                 )}
               >
@@ -413,7 +418,7 @@ export function HeroVisual() {
             type="button"
             onClick={() => setUserPaused(!paused)}
             aria-label={paused ? "Play the tour" : "Pause the tour"}
-            className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+            className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground pointer-coarse:size-11"
           >
             {paused ? <Play size={12} /> : <Pause size={12} />}
           </button>
@@ -431,7 +436,7 @@ export function HeroVisual() {
           ].map((t) => (
             <span
               key={t.label}
-              className="absolute left-2 -translate-y-1/2 rotate-180 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 [writing-mode:vertical-rl] @md:left-3"
+              className="absolute left-2 -translate-y-1/2 rotate-180 font-mono text-[10px] uppercase tracking-[0.2em] @md:text-[9px] text-muted-foreground/50 [writing-mode:vertical-rl] @md:left-3"
               style={{ top: `${(t.y / VIEW_H) * 100}%` }}
             >
               {t.label}
@@ -483,11 +488,11 @@ export function HeroVisual() {
                   strokeWidth={0.45}
                   strokeDasharray="2 3"
                   strokeLinecap="round"
-                  className="animate-dash stroke-accent transition-opacity duration-300"
+                  className={cn("stroke-accent transition-opacity duration-300", lit && "animate-dash")}
                   style={{ opacity: lit ? 1 : 0 }}
                 />
-                {/* Ambient traffic */}
-                {!reduce && (
+                {/* Ambient traffic — unmounted off-screen so SMIL stops */}
+                {!reduce && inView && (
                   <circle r={0.55} className="fill-accent/60">
                     <animateMotion dur={`${2.6 + (i % 3) * 0.7}s`} begin={`-${(i * 0.83) % 2.6}s`} repeatCount="indefinite" path={e.d} />
                   </circle>
@@ -515,7 +520,11 @@ export function HeroVisual() {
             lit={litNodes.has(n.id)}
             current={current === n.id}
             dim={inspect !== null && !litNodes.has(n.id)}
-            onInspect={(on) => setInspect(on ? n.id : null)}
+            selected={inspect === n.id}
+            onInspect={(on) => {
+              setInspect(on ? n.id : null);
+              if (on) setHasInspected(true);
+            }}
           />
         ))}
       </div>
@@ -530,7 +539,7 @@ export function HeroVisual() {
                 <span className="text-xs font-medium text-accent">{inspected.role}</span>
                 <span className="text-muted-foreground/50">·</span>
                 {inspected.usedIn.map((p) => (
-                  <span key={p} className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                  <span key={p} className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[11px] text-muted-foreground @md:text-[10px]">
                     {p}
                   </span>
                 ))}
@@ -554,7 +563,7 @@ export function HeroVisual() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 420, damping: 22 }}
-                      className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10.5px] font-semibold text-accent ring-1 ring-accent/30"
+                      className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent ring-1 ring-accent/30 @md:text-[10.5px]"
                     >
                       <Check size={11} strokeWidth={3} />
                       {flow.outcome}
@@ -569,7 +578,12 @@ export function HeroVisual() {
                   <UserRound size={11} className="text-accent" />
                   {flow.myRole}
                 </span>
-                <ol aria-label="Behind the scenes" className="flex flex-wrap items-center gap-1 font-mono text-[10px]">
+                {!hasInspected && (
+                  <span className="hidden text-[11px] text-muted-foreground/80 pointer-coarse:inline">
+                    Tap a block to see what it does
+                  </span>
+                )}
+                <ol aria-label="Behind the scenes" className="flex flex-wrap items-center gap-1 font-mono text-[11px] @md:text-[10px]">
                   {flow.path.map((id, i) => (
                     <li key={i} className="flex items-center gap-1">
                       {i > 0 && <span className={cn("transition-colors", i <= step ? "text-accent" : "text-muted-foreground/40")}>→</span>}
@@ -614,6 +628,7 @@ function NodeView({
   lit,
   current,
   dim,
+  selected,
   onInspect,
 }: {
   node: StackNode;
@@ -621,6 +636,7 @@ function NodeView({
   lit: boolean;
   current: boolean;
   dim: boolean;
+  selected: boolean;
   onInspect: (on: boolean) => void;
 }) {
   const { hub } = node;
@@ -632,7 +648,8 @@ function NodeView({
       animate={{ opacity: dim ? 0.4 : 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.35 + index * 0.06 }}
       whileHover={{ scale: 1.06 }}
-      onPointerEnter={() => onInspect(true)}
+      onPointerEnter={(e) => e.pointerType === "mouse" && onInspect(true)}
+      onClick={() => onInspect(!selected)}
       onFocus={() => onInspect(true)}
       className="group/node absolute z-10 rounded-2xl"
       style={{
@@ -692,7 +709,7 @@ function NodeView({
           <span className="absolute left-1/2 top-full mt-1 flex -translate-x-1/2 flex-col items-center rounded-md bg-card/80 px-1.5 py-0.5">
             <span
               className={cn(
-                "whitespace-nowrap font-mono text-[9.5px] transition-colors duration-300 @md:text-[10.5px]",
+                "whitespace-nowrap font-mono text-[11px] transition-colors duration-300 @md:text-[10.5px]",
                 lit ? "text-foreground" : "text-muted-foreground",
               )}
             >

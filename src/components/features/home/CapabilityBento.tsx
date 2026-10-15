@@ -154,14 +154,14 @@ function Centre({ children, className }: { children: ReactNode; className?: stri
 function ScreensVisual({ live }: { live: boolean }) {
   return (
     <Centre>
-      <div className="grid grid-cols-8 gap-1.5 xl:gap-2.5">
+      <div className="grid w-full max-w-[330px] grid-cols-8 gap-1.5 xl:w-auto xl:max-w-none xl:gap-2.5">
         {Array.from({ length: 24 }, (_, i) => {
           const col = i % 8;
           const row = Math.floor(i / 8);
           return (
             <motion.span
               key={i}
-              className="relative flex h-7 w-9 flex-col gap-0.5 rounded-[5px] border border-border/70 bg-card p-1 xl:h-11 xl:w-14 xl:gap-1 xl:rounded-md xl:p-1.5"
+              className="relative flex aspect-[9/7] h-auto w-full max-w-9 flex-col gap-0.5 rounded-[5px] border border-border/70 bg-card p-1 xl:aspect-auto xl:h-11 xl:w-14 xl:gap-1 xl:rounded-md xl:p-1.5"
               animate={live ? { y: [0, -3, 0] } : undefined}
               transition={loop(live, 2.4, (col + row) * 0.12)}
             >
@@ -316,7 +316,7 @@ function TenantsVisual({ live }: { live: boolean }) {
 function KeyboardVisual({ live }: { live: boolean }) {
   return (
     <Centre className="flex-col gap-4">
-      <div className="relative flex gap-2">
+      <div className="relative flex gap-2 max-sm:origin-center max-sm:scale-[0.85]">
         {["Search", "Filter", "Export", "Save"].map((l) => (
           <span key={l} className="w-14 rounded-lg border border-border/70 bg-card py-1.5 text-center text-[10px] text-muted-foreground">
             {l}

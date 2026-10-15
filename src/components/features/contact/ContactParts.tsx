@@ -189,6 +189,30 @@ const CHANNELS = [
   { href: profile.socials.github, label: "GitHub", value: "SekarNagarajan07", icon: GithubIcon, external: true, note: "See my code" },
 ] as const;
 
+/** One-tap Email / LinkedIn chips for phones, where the full channel
+ * cards sit below the long form. */
+export function QuickChannels() {
+  return (
+    <ul className="flex flex-wrap gap-2 lg:hidden" aria-label="Quick contact channels">
+      {CHANNELS.slice(0, 2).map(({ href, label, icon: Icon, external, note }) => (
+        <li key={label}>
+          <a
+            href={href}
+            data-track="profile_click"
+            data-track-label={`${label} (quick)`}
+            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className="glass-sm inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-foreground/90"
+          >
+            <Icon size={16} className="text-accent" />
+            {label}
+            <span className="text-xs text-muted-foreground">{note}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function Channels() {
   const reduce = useReducedMotion();
   return (

@@ -161,6 +161,7 @@ export function SpotlightCard({
             }
       }
       onPointerMove={(e) => {
+        if (e.pointerType !== "mouse") return; // hover-only effect — skip touch
         const r = e.currentTarget.getBoundingClientRect();
         mx.set(e.clientX - r.left);
         my.set(e.clientY - r.top);

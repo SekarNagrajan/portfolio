@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { ChipRail } from "@/components/ui/ChipRail";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +10,13 @@ import { cn } from "@/lib/utils";
  * Sticky "On this page" navigation. An IntersectionObserver tracks which
  * section is in the reading band; a shared-layout bar slides to it.
  */
-export function CaseStudyToc({ sections }: { sections: readonly { id: string; label: string }[] }) {
+export function CaseStudyToc({
+  sections,
+  variant = "list",
+}: {
+  sections: readonly { id: string; label: string }[];
+  variant?: "list" | "rail";
+}) {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(sections[0]?.id);
 
@@ -28,6 +35,32 @@ export function CaseStudyToc({ sections }: { sections: readonly { id: string; la
     });
     return () => observer.disconnect();
   }, [sections]);
+
+  if (variant === "rail") {
+    return (
+      <nav aria-label="On this page">
+        <ChipRail label="On this page" activeKey={active} className="glass rounded-full p-1.5">
+          {sections.map(({ id, label }) => {
+            const isActive = id === active;
+            return (
+              <a
+                key={id}
+                href={`#${id}`}
+                data-active={isActive || undefined}
+                aria-current={isActive ? "location" : undefined}
+                className={cn(
+                  "inline-flex h-10 shrink-0 snap-start items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors",
+                  isActive ? "bg-accent/15 text-accent" : "text-muted-foreground",
+                )}
+              >
+                {label}
+              </a>
+            );
+          })}
+        </ChipRail>
+      </nav>
+    );
+  }
 
   return (
     <nav aria-label="On this page" className="glass rounded-2xl p-5">

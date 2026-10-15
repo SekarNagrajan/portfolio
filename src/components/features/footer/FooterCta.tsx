@@ -87,7 +87,7 @@ export function FooterCta() {
 
         {/* Contact panel */}
         <div className="flex flex-col justify-center gap-5 border-t border-border/60 bg-foreground/[0.02] p-7 sm:p-10 lg:border-l lg:border-t-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Reach me directly
           </p>
 

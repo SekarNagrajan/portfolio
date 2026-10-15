@@ -69,7 +69,7 @@ export function Navbar() {
         >
           <div
             className={cn(
-              "flex h-14 w-full items-center justify-between gap-2 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl",
+              "flex h-14 w-full items-center justify-between gap-2 border-b border-border/70 bg-background/95 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] backdrop-blur-md",
               "lg:h-auto lg:gap-4 lg:rounded-full lg:border-b-0 lg:bg-transparent lg:px-4 lg:py-2 lg:backdrop-blur-none",
               scrolled
                 ? "lg:glass lg:shadow-[0_8px_40px_-12px_rgb(0_0_0/0.6)]"

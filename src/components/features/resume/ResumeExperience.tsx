@@ -20,6 +20,7 @@ import { projects } from "@/lib/data/projects";
 import { skillGroups } from "@/lib/data/skills";
 import { education, certifications } from "@/lib/data/education";
 import { spring } from "@/lib/motion";
+import { ChipRail } from "@/components/ui/ChipRail";
 import { cn } from "@/lib/utils";
 
 const job = experiences[0];
@@ -38,7 +39,7 @@ export function ResumeExperience({ src, filename }: Props) {
       <section id="resume" className="shell relative scroll-mt-24 pb-16 pt-12 sm:pb-24">
         {/* Phone / tablet: choose a view — embedded PDFs are unreliable on mobile. */}
         <LayoutGroup id="resume-view">
-          <div role="tablist" aria-label="Resume view" className="glass mb-5 grid grid-cols-2 gap-1 rounded-full p-1.5 lg:hidden">
+          <div role="tablist" aria-label="Resume view" className="glass mb-5 hidden grid-cols-2 gap-1 rounded-full p-1.5 sm:grid lg:hidden">
             {(
               [
                 ["read", "Quick read"],
@@ -73,7 +74,7 @@ export function ResumeExperience({ src, filename }: Props) {
           <div className={cn(view !== "read" && "hidden lg:block")}>
             <QuickRead />
           </div>
-          <div className={cn("lg:sticky lg:top-[calc(var(--nav-height)+1.5rem)]", view !== "pdf" && "hidden lg:block")}>
+          <div className={cn("lg:sticky lg:top-[calc(var(--header-offset)+1.5rem)]", view !== "pdf" && "hidden lg:block")}>
             <PdfWindow src={src} filename={filename} />
           </div>
         </div>
@@ -149,6 +150,15 @@ function Actions({ src, filename, compact = false }: Props & { compact?: boolean
 
   const copyLink = async () => {
     const url = new URL(src, window.location.origin).toString();
+    // Phones: the native share sheet beats a silent clipboard write.
+    if (typeof navigator.share === "function" && window.matchMedia("(hover: none)").matches) {
+      try {
+        await navigator.share({ title: filename, url });
+        return;
+      } catch {
+        return; // user dismissed the sheet — nothing to report
+      }
+    }
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -159,7 +169,7 @@ function Actions({ src, filename, compact = false }: Props & { compact?: boolean
     }
   };
 
-  const size = compact ? "h-10 px-4 text-xs" : "h-12 px-6 text-sm";
+  const size = compact ? "h-11 px-4 text-sm" : "h-12 px-6 text-sm";
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
@@ -338,7 +348,7 @@ function QuickRead() {
             <a href={profile.socials.email} className="min-w-0 truncate text-foreground/85 hover:underline">
               {profile.email}
             </a>
-            <CopyEmailButton source="resume" className="size-7" />
+            <CopyEmailButton source="resume" className="size-7 pointer-coarse:size-10" />
           </li>
           <li className="flex items-center gap-2.5 text-foreground/85">
             <PhoneIcon size={15} className="text-accent" />
@@ -350,7 +360,7 @@ function QuickRead() {
       </div>
 
       <LayoutGroup id="quick-read">
-        <div role="tablist" aria-label="Resume sections" className="flex gap-1 overflow-x-auto border-b border-border/60 px-3 py-2 [scrollbar-width:none]">
+        <ChipRail role="tablist" label="Resume sections" activeKey={tab} className="border-b border-border/60 px-3 py-2">
           {SECTIONS.map((s) => (
             <button
               key={s}
@@ -358,10 +368,11 @@ function QuickRead() {
               role="tab"
               id={`qr-tab-${s}`}
               aria-selected={tab === s}
+              data-active={tab === s || undefined}
               aria-controls="qr-panel"
               onClick={() => setTab(s)}
               className={cn(
-                "relative isolate h-9 shrink-0 rounded-full px-3.5 text-sm font-medium transition-colors",
+                "relative isolate h-9 shrink-0 snap-start rounded-full px-3.5 text-sm font-medium transition-colors pointer-coarse:h-11",
                 tab === s ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -375,7 +386,7 @@ function QuickRead() {
               {s}
             </button>
           ))}
-        </div>
+        </ChipRail>
       </LayoutGroup>
 
       <div id="qr-panel" role="tabpanel" aria-labelledby={`qr-tab-${tab}`} className="min-h-[24rem] p-5 sm:p-6">
@@ -575,12 +586,14 @@ function PdfWindow({ src, filename }: Props) {
           <span className="truncate">{filename}</span>
         </span>
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          <ToolButton label="Print" onClick={print}>
-            <Printer size={15} />
-          </ToolButton>
-          <ToolButton label={full ? "Exit full screen" : "Full screen"} onClick={toggleFull}>
-            {full ? <Minimize size={15} /> : <Expand size={15} />}
-          </ToolButton>
+          <span className="hidden items-center gap-1 sm:flex">
+            <ToolButton label="Print" onClick={print}>
+              <Printer size={15} />
+            </ToolButton>
+            <ToolButton label={full ? "Exit full screen" : "Full screen"} onClick={toggleFull}>
+              {full ? <Minimize size={15} /> : <Expand size={15} />}
+            </ToolButton>
+          </span>
           <a
             href={src}
             download={filename}
@@ -609,17 +622,17 @@ function PdfWindow({ src, filename }: Props) {
             )}
           </div>
         </div>
-        {/* Most phone browsers can't embed PDFs, so phones get a clear hand-off instead. */}
-        <div className="relative flex h-full flex-col items-center justify-center gap-4 bg-card p-8 text-center text-sm text-muted-foreground sm:hidden">
+        {/* Phone & tablet browsers can't reliably embed PDFs — hand off instead. */}
+        <div className="relative flex h-full flex-col items-center justify-center gap-4 bg-card p-8 text-center text-sm text-muted-foreground lg:hidden">
           <FileText size={36} className="text-accent" />
-          <p className="max-w-xs">Phones open PDFs best in their own viewer. Open it, or save it to share.</p>
+          <p className="max-w-xs">This device opens PDFs best in its own viewer. Open it, or save it to share.</p>
           <Actions src={src} filename={filename} compact />
         </div>
         <object
           data={`${src}#view=FitH&toolbar=1&navpanes=0`}
           type="application/pdf"
           aria-label={`${profile.name} resume preview`}
-          className="relative hidden size-full sm:block"
+          className="relative hidden size-full lg:block"
         >
           <div className="relative flex h-full flex-col items-center justify-center gap-4 bg-card p-10 text-center text-sm text-muted-foreground">
             <FileText size={36} className="text-accent" />

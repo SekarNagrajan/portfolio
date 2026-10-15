@@ -142,13 +142,13 @@ export default async function CaseStudyPage({ params }: PageProps<"/projects/[sl
 
       {/* Stat strip */}
       <Section className="pb-0 sm:pb-0">
-        <Stagger className="grid gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/60 sm:grid-cols-3">
+        <Stagger className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/60">
           {study.stats.map((s) => (
-            <RevealItem key={s.label} className="bg-background/80 p-6 backdrop-blur">
-              <p className="text-4xl font-semibold tracking-tight text-gradient sm:text-5xl">
+            <RevealItem key={s.label} className="bg-background/80 p-4 backdrop-blur sm:p-6">
+              <p className="text-2xl font-semibold tracking-tight text-gradient sm:text-5xl">
                 <CountUp to={s.value} suffix={s.suffix} />
               </p>
-              <p className="mt-2 text-sm text-muted-foreground">{s.label}</p>
+              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{s.label}</p>
             </RevealItem>
           ))}
         </Stagger>
@@ -161,6 +161,10 @@ export default async function CaseStudyPage({ params }: PageProps<"/projects/[sl
               <CaseStudyToc sections={SECTIONS} />
             </div>
           </aside>
+
+          <div className="sticky top-[calc(var(--header-offset)+0.5rem)] z-20 -mx-1 px-1 xl:hidden">
+            <CaseStudyToc sections={SECTIONS} variant="rail" />
+          </div>
 
           <article className="min-w-0 space-y-20">
             <section id="problem" aria-labelledby="problem-title" className="scroll-mt-28">

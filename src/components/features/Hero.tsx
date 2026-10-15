@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { profile } from "@/lib/data/profile";
 import { fadeUp, staggerContainer } from "@/lib/motion";
+import { useIsMobile } from "@/lib/hooks";
 import { CountUp, Magnetic, RotatingText } from "@/components/motion/Effects";
 import { HeroVisual } from "@/components/features/HeroVisual";
 import { Glass } from "@/components/ui/glass";
@@ -68,9 +69,13 @@ export function Hero() {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const yText = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "18%"]);
-  const yVisual = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "-12%"]);
-  const fade = useTransform(scrollYProgress, [0, 0.8], [1, reduce ? 1 : 0]);
+  // Parallax only where the columns sit side by side — stacked on phones,
+  // the drifting columns would slide into each other.
+  const isMobile = useIsMobile();
+  const still = reduce || isMobile;
+  const yText = useTransform(scrollYProgress, [0, 1], ["0%", still ? "0%" : "18%"]);
+  const yVisual = useTransform(scrollYProgress, [0, 1], ["0%", still ? "0%" : "-12%"]);
+  const fade = useTransform(scrollYProgress, [0, 0.8], [1, still ? 1 : 0]);
 
   const [first, ...rest] = profile.name.split(" ");
 
@@ -169,10 +174,13 @@ export function Hero() {
 
           <motion.dl
             variants={fadeUp}
-            className="glass mt-2 grid w-full grid-cols-2 divide-x divide-y divide-border/50 overflow-hidden rounded-2xl sm:grid-cols-4 sm:divide-y-0"
+            className="glass mt-2 grid w-full grid-cols-2 overflow-hidden rounded-2xl sm:grid-cols-4"
           >
-            {STATS.map((s) => (
-              <div key={s.label} className="px-5 py-4">
+            {STATS.map((s, i) => (
+              <div
+                key={s.label}
+                className={`px-5 py-4 ${i % 2 ? "border-l border-border/50" : "sm:border-l sm:border-border/50 sm:first:border-l-0"} ${i < 2 ? "border-b border-border/50 sm:border-b-0" : ""}`}
+              >
                 <dd className="text-3xl font-semibold tracking-tight text-foreground">
                   <CountUp to={s.value} suffix={s.suffix} />
                 </dd>

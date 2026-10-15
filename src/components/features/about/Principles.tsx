@@ -45,7 +45,7 @@ export function Principles() {
             </div>
             <span
               aria-hidden
-              className="text-5xl font-bold tabular-nums leading-none tracking-tight text-transparent transition-colors duration-500 [-webkit-text-stroke:1px_color-mix(in_oklab,var(--foreground)_22%,transparent)] group-hover:text-accent/80 group-hover:[-webkit-text-stroke:1px_transparent]"
+              className="text-5xl font-bold tabular-nums leading-none tracking-tight text-transparent transition-colors duration-500 [-webkit-text-stroke:1px_color-mix(in_oklab,var(--foreground)_22%,transparent)] group-hover:text-accent/80 group-hover:[-webkit-text-stroke:1px_transparent] pointer-coarse:text-accent/80 pointer-coarse:[-webkit-text-stroke:1px_transparent]"
             >
               {String(i + 1).padStart(2, "0")}
             </span>
@@ -56,9 +56,9 @@ export function Principles() {
             <div className="relative overflow-hidden rounded-xl border border-border/60 bg-foreground/[0.03] p-3.5">
               <span
                 aria-hidden
-                className="absolute inset-y-0 left-0 w-0.5 origin-top scale-y-0 bg-accent transition-transform duration-500 group-hover:scale-y-100"
+                className="absolute inset-y-0 left-0 w-0.5 origin-top scale-y-0 bg-accent transition-transform duration-500 group-hover:scale-y-100 pointer-coarse:scale-y-100"
               />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">In practice</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">In practice</p>
               <p className="mt-1 text-pretty text-sm leading-relaxed text-foreground/85">{practice}</p>
             </div>
           </div>
