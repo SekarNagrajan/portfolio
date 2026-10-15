@@ -236,7 +236,7 @@ function PaperStack({ src, filename }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring.soft, delay: 0.2 }}
       whileHover="fan"
-      className="group relative mx-auto block aspect-[4/5] w-full max-w-[360px] [perspective:1200px]"
+      className="group relative mx-auto hidden aspect-[4/5] w-full max-w-[360px] [perspective:1200px] sm:block"
     >
       {[2, 1].map((k) => (
         <motion.span
@@ -570,11 +570,11 @@ function PdfWindow({ src, filename }: Props) {
             <span key={i} className="size-3 rounded-full bg-muted-foreground/30" />
           ))}
         </span>
-        <span className="ml-1 inline-flex min-w-0 items-center gap-1.5 font-mono text-xs text-muted-foreground">
+        <span className="ml-1 inline-flex min-w-0 flex-1 items-center gap-1.5 font-mono text-xs text-muted-foreground">
           <FileText size={13} className="shrink-0 text-accent" />
           <span className="truncate">{filename}</span>
         </span>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <ToolButton label="Print" onClick={print}>
             <Printer size={15} />
           </ToolButton>
@@ -586,14 +586,15 @@ function PdfWindow({ src, filename }: Props) {
             download={filename}
             data-track="cv_download"
             data-track-label="resume_viewer"
-            className="ml-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3 text-xs font-semibold text-background"
+            aria-label="Download"
+            className="ml-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-foreground px-2.5 text-xs font-semibold text-background sm:px-3"
           >
-            <DownloadIcon size={13} /> Download
+            <DownloadIcon size={13} /> <span className="hidden sm:inline">Download</span>
           </a>
         </div>
       </div>
 
-      <div className={cn("relative bg-background", full ? "flex-1" : "h-[min(78dvh,980px)]")}>
+      <div className={cn("relative bg-background", full ? "flex-1" : "h-[24rem] sm:h-[min(78dvh,980px)]")}>
         {/* Skeleton sits behind the PDF; the viewer paints over it once loaded. */}
         <div aria-hidden className="absolute inset-0 flex justify-center overflow-hidden p-6">
           <div className="flex w-full max-w-[640px] flex-col gap-3 rounded-lg border border-border/60 bg-card p-8">
@@ -608,11 +609,17 @@ function PdfWindow({ src, filename }: Props) {
             )}
           </div>
         </div>
+        {/* Most phone browsers can't embed PDFs, so phones get a clear hand-off instead. */}
+        <div className="relative flex h-full flex-col items-center justify-center gap-4 bg-card p-8 text-center text-sm text-muted-foreground sm:hidden">
+          <FileText size={36} className="text-accent" />
+          <p className="max-w-xs">Phones open PDFs best in their own viewer. Open it, or save it to share.</p>
+          <Actions src={src} filename={filename} compact />
+        </div>
         <object
           data={`${src}#view=FitH&toolbar=1&navpanes=0`}
           type="application/pdf"
           aria-label={`${profile.name} resume preview`}
-          className="relative size-full"
+          className="relative hidden size-full sm:block"
         >
           <div className="relative flex h-full flex-col items-center justify-center gap-4 bg-card p-10 text-center text-sm text-muted-foreground">
             <FileText size={36} className="text-accent" />
